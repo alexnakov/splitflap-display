@@ -4,25 +4,6 @@ import math
 import random
 import numpy as np
 
-"""
-Split-Flap Display (Pygame)
-
-- Mimics the visual flip of split-flap modules using a two-phase hinge animation (close then open).
-- Plays a short mechanical "clack" sound on each flap using procedurally generated audio (no external files).
-- Demo toggles between two texts every few seconds.
-
-Controls:
-  - ESC or Q: quit
-  - SPACE: manually toggle between the two demo texts
-
-Requirements:
-  - pygame
-  - numpy (for procedural sound). If numpy/mixer fails, app runs silently.
-"""
-
-# ------------------------------
-# Configuration
-# ------------------------------
 SCREEN_W, SCREEN_H = 1200, 720
 FPS = 60
 BG_COLOR = (10, 12, 14)
