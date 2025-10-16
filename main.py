@@ -23,7 +23,7 @@ Requirements:
 # ------------------------------
 # Configuration
 # ------------------------------
-SCREEN_W, SCREEN_H = 1200, 280
+SCREEN_W, SCREEN_H = 1200, 720
 FPS = 60
 BG_COLOR = (10, 12, 14)
 BOARD_COLOR = (18, 20, 24)
@@ -36,8 +36,22 @@ CHARSET = " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-/'#:"
 CHAR_INDEX = {c: i for i, c in enumerate(CHARSET)}
 
 # Demo texts (must be same length for best effect; will be padded)
-TEXT_A = "NEW YORK  JFK  AA123  14:05  ON TIME"
-TEXT_B = "SAN DIEGO SAN  UA987  15:40  BOARD  "
+TEXT_A = [
+    "NEW YORK  JFK  AA123 ",
+    "BOSTON     BOS  DL987",
+    "CHICAGO    ORD  UA452",
+    "LOS ANGELES LAX SW330",
+    "SEATTLE    SEA  AS808",
+    "MIAMI      MIA  AA455",
+]
+TEXT_B = [
+    "SAN DIEGO  SAN UA987 ",
+    "ATLANTA    ATL DL204",
+    "DALLAS     DFW AA540",
+    "DENVER     DEN UA311",
+    "PHOENIX    PHX SW209",
+    "LAS VEGAS  LAS NK701",
+]
 
 # Board / cell sizing
 CELL_W = 36
@@ -45,6 +59,9 @@ CELL_H = 64
 CELL_GAP = 6
 TOP_MARGIN = 80
 LEFT_MARGIN = 40
+
+ROWS = 6
+COLS = 22
 
 # Animation timings (seconds)
 FLIP_CLOSE_TIME = 0.07   # top half folding down
@@ -319,13 +336,9 @@ class App:
         self.screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
         self.clock = pygame.time.Clock()
 
-        # Background board surface
-        self.board = pygame.Surface((SCREEN_W - 2*LEFT_MARGIN, CELL_H + 40))
-        self.board.fill(BOARD_COLOR)
-        pygame.draw.rect(self.board, ACCENT, self.board.get_rect(), width=2, border_radius=12)
-
         # Fonts
-        self.font = pygame.font.SysFont("DejaVu Sans Mono", 44, bold=True)
+        font_path = "./fonts/DepartureMono-Regular.otf"
+        self.font = pygame.font.Font(font_path, 44)
         self.ui_font = pygame.font.SysFont("DejaVu Sans", 18)
         self.title_font = pygame.font.SysFont("DejaVu Sans", 22, bold=True)
 
@@ -343,33 +356,40 @@ class App:
             self.sounds = []
 
         # Build row sized to the longer of the two texts
-        max_len = max(len(TEXT_A), len(TEXT_B))
-        n_chars = max_len
-        # Center the row horizontally
+        n_chars = COLS
         total_w = n_chars * CELL_W + (n_chars - 1) * CELL_GAP
         start_x = (SCREEN_W - total_w) // 2
-        self.rows_list = []
-        self.row = FlapRow(start_x, TOP_MARGIN, n_chars, self.font)
-        self.row2 = FlapRow(start_x, TOP_MARGIN, n_chars, self.font)
-        self.row.set_soundbank(self.sounds)
+
+        self.rows = []
+        for i in range(ROWS):
+            row_y = TOP_MARGIN + i * (CELL_H + CELL_GAP)
+            row = FlapRow(start_x, row_y, n_chars, self.font)
+            row.set_soundbank(self.sounds)
+            self.rows.append(row)
 
         # Initialize with normalized A and schedule flip to B
-        self.current_text = self._normalize_len(TEXT_A, n_chars)
-        self.alt_text = self._normalize_len(TEXT_B, n_chars)
-        self.row.set_text_immediate(self.current_text)
+        self.current_rows = self._normalize_rows(TEXT_A)
+        self.alt_rows = self._normalize_rows(TEXT_B)
+        for flap_row, text in zip(self.rows, self.current_rows):
+            flap_row.set_text_immediate(text)
 
         self.time_since_toggle = 0.0
 
-    def _normalize_len(self, text, L):
-        text = text.upper()
-        text = ''.join(ch if ch in CHARSET else ' ' for ch in text)
-        if len(text) < L:
-            text += ' ' * (L - len(text))
-        return text[:L]
+    def _normalize_rows(self, rows):
+        normalized = []
+        for row in rows:
+            row = row.upper()
+            row = ''.join(ch if ch in CHARSET else ' ' for ch in row)
+            if len(row) < COLS:
+                row += ' ' * (COLS - len(row))
+            normalized.append(row[:COLS])
+        return normalized
+
 
     def toggle(self):
-        self.current_text, self.alt_text = self.alt_text, self.current_text
-        self.row.flip_to(self.current_text)
+        self.current_rows, self.alt_rows = self.alt_rows, self.current_rows
+        for flap_row, text in zip(self.rows, self.current_rows):
+            flap_row.flip_to(text)
         self.time_since_toggle = 0.0
 
     def run(self):
@@ -388,21 +408,14 @@ class App:
             # Auto-toggle every TOGGLE_PERIOD seconds
             self.time_since_toggle += dt
 
-            self.row.update(dt)
+            for flap_row in self.rows:
+                flap_row.update(dt)
 
             # Draw
             self.screen.fill(BG_COLOR)
-            # Center board
-            board_x = (SCREEN_W - self.board.get_width()) // 2
-            self.screen.blit(self.board, (board_x, TOP_MARGIN - 20))
 
-            self.row.draw(self.screen)
-
-            # UI overlay
-            hint1 = self.ui_font.render("SPACE to toggle  •  ESC to quit", True, (180, 185, 190))
-            self.screen.blit(hint1, (20, SCREEN_H - 32))
-            title = self.title_font.render("Split-Flap Display (demo)", True, (210, 215, 220))
-            self.screen.blit(title, (20, 16))
+            for flap_row in self.rows:
+                flap_row.draw(self.screen)
 
             pygame.display.flip()
         pygame.quit()
