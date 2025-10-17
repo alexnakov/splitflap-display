@@ -47,3 +47,7 @@ FLIP_OPEN_TIME = 0.045    # bottom half opening to reveal next
 INTER_FLAP_DELAY = 0.027  # cascade delay between neighboring cells
 
 TOGGLE_PERIOD = 100.0 # Keeping super high for testing
+
+GHOST_TIMER = 20
+ROW_REFRESH_TIMER = 60 * 2.5
+FULLBOARD_REFRESH_TIMER = 60 * 10 
