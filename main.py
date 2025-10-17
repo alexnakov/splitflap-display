@@ -5,6 +5,7 @@ import random
 import numpy as np
 import librosa
 import soundfile as sf
+from london_weather import fetch_weather_update
 
 SCREEN_W, SCREEN_H = 1200, 720
 FPS = 60
@@ -284,6 +285,9 @@ class App:
         pygame.mixer.init()
         self.screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
         self.clock = pygame.time.Clock()
+        initial_weather = fetch_weather_update()
+        self.text_a = initial_weather
+        self.text_b = initial_weather
 
         # Fonts
         font_path = "./fonts/DepartureMono-Regular.otf"
@@ -304,8 +308,9 @@ class App:
             self.rows.append(row)
 
         # Initialize with normalized A and schedule flip to B
-        self.current_rows = self._normalize_rows(TEXT_A)
-        self.alt_rows = self._normalize_rows(TEXT_B)
+        self.current_rows = self._normalize_rows(self.text_a)
+        self.text_b = fetch_weather_update() # Updating new weather
+        self.alt_rows = self._normalize_rows(self.text_b)
         for flap_row, text in zip(self.rows, self.current_rows):
             flap_row.set_text_immediate(text)
 
