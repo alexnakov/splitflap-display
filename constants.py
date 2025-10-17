@@ -32,14 +32,41 @@ TEXT_B = [
 ]
 
 # Board / cell sizing
+# --- Physical monitor dimensions (mm) ---
+MONITOR_WIDTH_MM  = 612.3
+MONITOR_HEIGHT_MM = 366.5
+
+# --- Actual screen resolution (adjust to your monitor) ---
+SCREEN_W = 1920
+SCREEN_H = 1080
+
+# --- Derived pixel density ---
+PX_PER_MM = SCREEN_W / MONITOR_WIDTH_MM
+
+# --- Base layout design ---
 CELL_W = 36
 CELL_H = 64
 CELL_GAP = 6
 TOP_MARGIN = 80
 LEFT_MARGIN = 40
-
 ROWS = 6
 COLS = 22
+
+# --- Compute scaling to fit display ---
+BOARD_W = COLS * CELL_W + (COLS - 1) * CELL_GAP + LEFT_MARGIN * 2
+BOARD_H = ROWS * CELL_H + (ROWS - 1) * CELL_GAP + TOP_MARGIN
+
+SCALE_W = SCREEN_W / BOARD_W
+SCALE_H = SCREEN_H / BOARD_H
+SCALE = min(SCALE_W, SCALE_H)
+
+# --- Apply scaling ---
+CELL_W = int(CELL_W * SCALE)
+CELL_H = int(CELL_H * SCALE)
+CELL_GAP = int(CELL_GAP * SCALE)
+TOP_MARGIN = int(TOP_MARGIN * SCALE)
+LEFT_MARGIN = int(LEFT_MARGIN * SCALE)
+
 
 # Animation timings (seconds)
 FLIP_CLOSE_TIME = 0.035   # top half folding down
@@ -50,4 +77,4 @@ TOGGLE_PERIOD = 100.0 # Keeping super high for testing
 
 GHOST_TIMER = 20
 ROW_REFRESH_TIMER = 60 * 2.5
-FULLBOARD_REFRESH_TIMER = 60 * 10 
+FULLBOARD_REFRESH_TIMER = 60 * 10
