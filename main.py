@@ -53,8 +53,7 @@ FLIP_CLOSE_TIME = 0.035   # top half folding down
 FLIP_OPEN_TIME = 0.045    # bottom half opening to reveal next
 INTER_FLAP_DELAY = 0.027  # cascade delay between neighboring cells
 
-# Auto-toggle between A/B every N seconds
-TOGGLE_PERIOD = 6.0 # You want to keep this for the update weather info
+TOGGLE_PERIOD = 100.0 # Keeping super high for testing
 
 class SplitFlap:
     """A single split-flap character with a two-phase flip animation."""
@@ -137,7 +136,7 @@ class SplitFlap:
     def draw(self, surface):
         r = self.rect
         # Slot background and bezel
-        FLAP_BORDER_RADIUS = 3
+        FLAP_BORDER_RADIUS = 4
         pygame.draw.rect(surface, SLOT_COLOR, r, border_radius=FLAP_BORDER_RADIUS)
         pygame.draw.rect(surface, ACCENT, r, width=2, border_radius=FLAP_BORDER_RADIUS)
         surface.blit(self.shadow_surf, r.topleft)
@@ -343,6 +342,8 @@ class App:
 
             # Auto-toggle every TOGGLE_PERIOD seconds
             self.time_since_toggle += dt
+            if self.time_since_toggle >= TOGGLE_PERIOD:
+                self.toggle()
 
             for flap_row in self.rows:
                 flap_row.update(dt)
