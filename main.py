@@ -56,10 +56,6 @@ INTER_FLAP_DELAY = 0.03  # cascade delay between neighboring cells
 # Auto-toggle between A/B every N seconds
 TOGGLE_PERIOD = 6.0 # You want to keep this for the update weather info
 
-# Sound configuration
-ENABLE_SOUND = True
-CLICK_VARIANTS = 5
-
 class SplitFlap:
     """A single split-flap character with a two-phase flip animation."""
     def __init__(self, x, y, w, h, font):
@@ -291,27 +287,16 @@ class App:
     def __init__(self):
         pygame.init()
         pygame.display.set_caption("Split-Flap Display – Demo")
+        pygame.mixer.pre_init(44100, -16, 2, 256)
+        pygame.mixer.init()
         self.screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
         self.clock = pygame.time.Clock()
 
         # Fonts
         font_path = "./fonts/DepartureMono-Regular.otf"
         self.font = pygame.font.Font(font_path, 44)
-        self.ui_font = pygame.font.SysFont("DejaVu Sans", 18)
-        self.title_font = pygame.font.SysFont("DejaVu Sans", 22, bold=True)
 
-        # Audio
         self.sounds = []
-        if ENABLE_SOUND:
-            try:
-                pygame.mixer.pre_init(44100, -16, 2, 256)
-            except Exception:
-                pass
-        try:
-            pygame.mixer.init()
-            self.sounds = generate_click_sounds(CLICK_VARIANTS)
-        except Exception:
-            self.sounds = []
 
         # Build row sized to the longer of the two texts
         n_chars = COLS
