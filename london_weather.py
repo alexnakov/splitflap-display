@@ -73,8 +73,8 @@ def fetch_weather_update():
     board = [
         fit(f"{location} MORNING REPORT"),
         fit(f"TIME          {timestr}"),
-        fit(f"TEMP            {temp}"),
-        fit(f"RAIN PROB.      {rain}"),
+        fit(f"TEMP             {temp}"),
+        fit(f"RAIN PROB.         {rain}"),
         fit(desc),
         fit("HAVE A GOOD DAY!"),
     ]
