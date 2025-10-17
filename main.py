@@ -56,10 +56,6 @@ INTER_FLAP_DELAY = 0.03  # cascade delay between neighboring cells
 # Auto-toggle between A/B every N seconds
 TOGGLE_PERIOD = 6.0 # You want to keep this for the update weather info
 
-# Sound configuration
-ENABLE_SOUND = True
-CLICK_VARIANTS = 5
-
 class SplitFlap:
     """A single split-flap character with a two-phase flip animation."""
     def __init__(self, x, y, w, h, font):
