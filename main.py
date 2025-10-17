@@ -60,21 +60,16 @@ class SplitFlap:
         ni = (ci + 1) % len(CHARSET)
         self.next_char = CHARSET[ni]
 
-    def start_flip(self, ghost=False, wave=False):
+    def start_flip(self, ghost=False):
         self.ghost = ghost
-        self.wave = wave
         self._advance_char()
 
         close_time = FLIP_CLOSE_TIME
         open_time  = FLIP_OPEN_TIME
         
-        if ghost and not wave:
+        if ghost:
             close_time *= 10.0   # slower for subtle ghost flips
             open_time  *= 10.0
-            self.next_char = self.current
-        elif wave:
-            close_time *= 1.0   # even slower, smooth mechanical wave
-            open_time  *= 1.0
             self.next_char = self.current
 
         self.flip_close_time = close_time
@@ -256,19 +251,6 @@ class FlapRow:
         for f in self.flaps:
             if random.random() < probability and f.state == 'idle':
                 f.start_flip(ghost=True)
-    
-    def wave_ghost_flip(self, base_delay=0.0):
-        """Flip a subset of flaps in a left→right wave pattern."""
-        delay = base_delay
-        new_pending = []
-        for f in self.flaps:
-            if random.random() < 0.15 and f.state == 'idle':
-                # schedule ghost flip with small delay for wave feel
-                new_pending.append((f, f.current, delay))
-            delay += 0.02  # time between each flap in this row
-
-        if new_pending:
-            self.pending_wave = new_pending
 
     def update(self, dt):
         # keep existing pending handling first
@@ -282,27 +264,15 @@ class FlapRow:
                     new_pending.append((f, c, delay))
             self.pending = new_pending if new_pending else None
 
-                # Detect if all flaps are idle (finished flipping)
+        # Detect if all flaps are idle (finished flipping)
         if not self.pending and all(f.state == 'idle' for f in self.flaps):
             if hasattr(self, 'on_complete') and callable(self.on_complete):
                 self.on_complete(self)
                 self.on_complete = None  # only trigger once
 
-        # --- NEW: handle wave pending ---
-        if hasattr(self, "pending_wave") and self.pending_wave:
-            new_wave = []
-            for f, c, delay in self.pending_wave:
-                delay -= dt
-                if delay <= 0:
-                    f.start_flip(ghost=True, wave=True)
-                else:
-                    new_wave.append((f, c, delay))
-            self.pending_wave = new_wave if new_wave else None
-
         # existing flap updates
         for f in self.flaps:
             f.update(dt)
-
 
 
 class App:
@@ -377,6 +347,25 @@ class App:
         for flap_row in self.rows:
             flap_row.on_complete = lambda row, app=self: app.on_refresh_complete()
 
+    def refresh_random_row(self):
+        """Force a random refresh on one random row."""
+        print("Refreshing single row...")
+        row_idx = random.randint(0, len(self.rows) - 1)
+        row = self.rows[row_idx]
+
+        # Generate random placeholder text for that row
+        rand_text = ''.join(random.choice(CHARSET) for _ in range(COLS))
+        row.flip_to(rand_text)
+
+        # When done, flip back to intended text
+        row.on_complete = lambda r=row, app=self, idx=row_idx: app._restore_row(idx)
+
+    def _restore_row(self, row_idx):
+        """Return a refreshed row back to its intended text."""
+        row = self.rows[row_idx]
+        intended_text = self.current_rows[row_idx]
+        row.flip_to(intended_text)
+
 
     def on_refresh_complete(self):
         """Callback when all rows finish random pass."""
@@ -386,14 +375,6 @@ class App:
             # Flip back to current intended text
             for flap_row, text in zip(self.rows, self.current_rows):
                 flap_row.flip_to(text)
-
-    
-    def trigger_wave_refresh(self):
-        """Trigger a gentle wave of ghost flips across the board."""
-        delay_step = 0.02  # seconds between each row start
-        for i, row in enumerate(self.rows):
-            row.wave_ghost_flip(base_delay=i * delay_step)
-
 
     def run(self):
         running = True
@@ -418,26 +399,26 @@ class App:
                 self.ghost_timer = 0.0
             self.ghost_timer += dt
             if self.ghost_timer >= GHOST_TIMER:  # every 10 seconds
-                # trigger small random ghost flips across the board
                 for flap_row in self.rows:
                     flap_row.ghost_flip(probability=0.1)
                 self.ghost_timer = 0.0
 
-            # --- Wave refresh timer ---
-            if not hasattr(self, "wave_timer"):
-                self.wave_timer = 0.0
-            self.wave_timer += dt
+            # --- Single-row random refresh timer ---
+            if not hasattr(self, "row_refresh_timer"):
+                self.row_refresh_timer = 0.0
+            self.row_refresh_timer += dt
 
-            if self.wave_timer >= WAVE_TIMER:  
-                self.trigger_wave_refresh()
-                self.wave_timer = 0.0
+            if self.row_refresh_timer >= ROW_REFRESH_TIMER:  # every 5 minutes
+                self.refresh_random_row()
+                self.row_refresh_timer = 0.0
+
 
             # --- Full board random refresh timer ---
             if not hasattr(self, "refresh_timer"):
                 self.refresh_timer = 0.0
             self.refresh_timer += dt
 
-            if self.refresh_timer >= REFRESH_TIMER:  # every 60 seconds
+            if self.refresh_timer >= FULLBOARD_REFRESH_TIMER:  # every 60 seconds
                 self.refresh_board()
                 self.refresh_timer = 0.0
 
