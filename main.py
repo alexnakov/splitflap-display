@@ -49,9 +49,9 @@ ROWS = 6
 COLS = 22
 
 # Animation timings (seconds)
-FLIP_CLOSE_TIME = 0.06   # top half folding down
-FLIP_OPEN_TIME = 0.08    # bottom half opening to reveal next
-INTER_FLAP_DELAY = 0.03  # cascade delay between neighboring cells
+FLIP_CLOSE_TIME = 0.035   # top half folding down
+FLIP_OPEN_TIME = 0.045    # bottom half opening to reveal next
+INTER_FLAP_DELAY = 0.027  # cascade delay between neighboring cells
 
 # Auto-toggle between A/B every N seconds
 TOGGLE_PERIOD = 6.0 # You want to keep this for the update weather info
@@ -120,13 +120,13 @@ class SplitFlap:
             return
 
         self.timer += dt
-        if self.state == 'closing' and self.timer >= FLIP_CLOSE_TIME:
+        if self.state == 'closing' and self.timer >= FLIP_CLOSE_TIME + random.uniform(-0.005, -0.005):
             # Commit to next char when fully closed
             self.current = self.next_char
             self.timer = 0.0
             self.state = 'opening'
             self._play_click()
-        elif self.state == 'opening' and self.timer >= FLIP_OPEN_TIME:
+        elif self.state == 'opening' and self.timer >= FLIP_OPEN_TIME + random.uniform(-0.005, -0.005):
             # Decide whether to continue flipping toward target
             self.timer = 0.0
             if self.current == self.target:
@@ -157,11 +157,11 @@ class SplitFlap:
 
         # Compute hinge animation progress 0..1
         if self.state == 'closing':
-            p = min(1.0, self.timer / FLIP_CLOSE_TIME)
+            p = min(1.0, self.timer / FLIP_CLOSE_TIME + random.uniform(-0.005, -0.005))
             # Top half folds down (covering current)
             self._draw_flip(surface, glyph_cur, glyph_next, gc_rect, gn_rect, p, phase='close')
         elif self.state == 'opening':
-            p = min(1.0, self.timer / FLIP_OPEN_TIME)
+            p = min(1.0, self.timer / FLIP_OPEN_TIME + random.uniform(-0.005, -0.005))
             # Bottom half opens to reveal the (committed) current
             self._draw_flip(surface, glyph_cur, glyph_next, gc_rect, gn_rect, p, phase='open')
 
@@ -221,9 +221,6 @@ class SplitFlap:
             surface.blit(scaled, (r.x, r.y + r.h//2))
             surface.blit(hinge_line, (r.x, r.y + r.h//2 - 1))
 
-# ------------------------------
-# Row of split-flaps
-# ------------------------------
 class FlapRow:
     def __init__(self, x, y, n_chars, font):
         self.flaps = []
@@ -280,9 +277,6 @@ class FlapRow:
         for f in self.flaps:
             f.draw(surface)
 
-# ------------------------------
-# Main application
-# ------------------------------
 class App:
     def __init__(self):
         pygame.init()
@@ -327,7 +321,6 @@ class App:
                 row += ' ' * (COLS - len(row))
             normalized.append(row[:COLS])
         return normalized
-
 
     def toggle(self):
         self.current_rows, self.alt_rows = self.alt_rows, self.current_rows
