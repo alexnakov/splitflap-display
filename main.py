@@ -221,9 +221,6 @@ class SplitFlap:
             surface.blit(scaled, (r.x, r.y + r.h//2))
             surface.blit(hinge_line, (r.x, r.y + r.h//2 - 1))
 
-# ------------------------------
-# Row of split-flaps
-# ------------------------------
 class FlapRow:
     def __init__(self, x, y, n_chars, font):
         self.flaps = []
@@ -280,9 +277,6 @@ class FlapRow:
         for f in self.flaps:
             f.draw(surface)
 
-# ------------------------------
-# Main application
-# ------------------------------
 class App:
     def __init__(self):
         pygame.init()
@@ -327,7 +321,6 @@ class App:
                 row += ' ' * (COLS - len(row))
             normalized.append(row[:COLS])
         return normalized
-
 
     def toggle(self):
         self.current_rows, self.alt_rows = self.alt_rows, self.current_rows
