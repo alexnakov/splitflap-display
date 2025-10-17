@@ -3,7 +3,6 @@ import sys
 import math
 import random
 import numpy as np
-import librosa
 import soundfile as sf
 from london_weather import fetch_weather_update
 from constants import *
@@ -26,11 +25,7 @@ class SplitFlap:
         self._bake_shadow()
 
     def set_soundbank(self, sounds):
-        y, sr = librosa.load(SOUND_PATH, sr=None)
-        rate = 1.3
-        y_fast = librosa.effects.time_stretch(y, rate=1.5)
-        sf.write(f"./audio/split_flap_edited_rate_{rate}.mp3", y_fast, sr)
-        self.click_sounds = [pygame.mixer.Sound(f"./audio/split_flap_edited_rate_{rate}.mp3")]
+        self.click_sounds = [pygame.mixer.Sound(f"./audio/split_flap_edited_rate_1.5.mp3")]
 
     def _bake_shadow(self):
         surf = self.shadow_surf
