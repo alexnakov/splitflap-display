@@ -299,8 +299,6 @@ class App:
         # Fonts
         font_path = "./fonts/DepartureMono-Regular.otf"
         self.font = pygame.font.Font(font_path, 44)
-        self.ui_font = pygame.font.SysFont("DejaVu Sans", 18)
-        self.title_font = pygame.font.SysFont("DejaVu Sans", 22, bold=True)
 
         self.sounds = []
 
