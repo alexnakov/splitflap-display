@@ -59,11 +59,16 @@ class SplitFlap:
         ni = (ci + 1) % len(CHARSET)
         self.next_char = CHARSET[ni]
 
-    def start_flip(self):
+    def start_flip(self, ghost=False):
+        self.ghost = ghost
         self._advance_char()
+        # If ghost, don't change to next character permanently
+        if ghost:
+            self.next_char = self.current
         self.state = 'closing'
         self.timer = 0.0
         self._play_click()
+
 
     def update(self, dt):
         if self.state == 'idle':
@@ -83,6 +88,7 @@ class SplitFlap:
             self.timer = 0.0
             if self.current == self.target:
                 self.state = 'idle'
+                self.ghost = False
             else:
                 self.start_flip()
 
@@ -229,6 +235,55 @@ class FlapRow:
         for f in self.flaps:
             f.draw(surface)
 
+    def ghost_flip(self, probability=0.1):
+        """Trigger a small random ghost flip on some flaps."""
+        for f in self.flaps:
+            if random.random() < probability and f.state == 'idle':
+                f.start_flip(ghost=True)
+    
+    def wave_ghost_flip(self, base_delay=0.0):
+        """Flip a subset of flaps in a left→right wave pattern."""
+        delay = base_delay
+        new_pending = []
+        for f in self.flaps:
+            if random.random() < 0.15 and f.state == 'idle':
+                # schedule ghost flip with small delay for wave feel
+                new_pending.append((f, f.current, delay))
+            delay += 0.02  # time between each flap in this row
+
+        # Use the same pending queue idea as normal flip_to()
+        if new_pending:
+            self.pending_wave = new_pending
+
+    def update(self, dt):
+        # keep existing pending handling first
+        if self.pending:
+            new_pending = []
+            for f, c, delay in self.pending:
+                delay -= dt
+                if delay <= 0:
+                    f.queue_target(c)
+                else:
+                    new_pending.append((f, c, delay))
+            self.pending = new_pending if new_pending else None
+
+        # --- NEW: handle wave pending ---
+        if hasattr(self, "pending_wave") and self.pending_wave:
+            new_wave = []
+            for f, c, delay in self.pending_wave:
+                delay -= dt
+                if delay <= 0:
+                    f.start_flip(ghost=True)
+                else:
+                    new_wave.append((f, c, delay))
+            self.pending_wave = new_wave if new_wave else None
+
+        # existing flap updates
+        for f in self.flaps:
+            f.update(dt)
+
+
+
 class App:
     def __init__(self):
         pygame.init()
@@ -283,6 +338,13 @@ class App:
         for flap_row, text in zip(self.rows, self.current_rows):
             flap_row.flip_to(text)
         self.time_since_toggle = 0.0
+    
+    def trigger_wave_refresh(self):
+        """Trigger a gentle wave of ghost flips across the board."""
+        delay_step = 0.02  # seconds between each row start
+        for i, row in enumerate(self.rows):
+            row.wave_ghost_flip(base_delay=i * delay_step)
+
 
     def run(self):
         running = True
@@ -301,6 +363,26 @@ class App:
             self.time_since_toggle += dt
             if self.time_since_toggle >= TOGGLE_PERIOD:
                 self.toggle()
+
+            # --- Ghost flip timer ---
+            if not hasattr(self, "ghost_timer"):
+                self.ghost_timer = 0.0
+            self.ghost_timer += dt
+            if self.ghost_timer >= GHOST_TIMER:  # every 10 seconds
+                # trigger small random ghost flips across the board
+                for flap_row in self.rows:
+                    flap_row.ghost_flip(probability=0.1)
+                self.ghost_timer = 0.0
+
+            # --- Wave refresh timer ---
+            if not hasattr(self, "wave_timer"):
+                self.wave_timer = 0.0
+            self.wave_timer += dt
+
+            if self.wave_timer >= WAVE_TIMER:  
+                self.trigger_wave_refresh()
+                self.wave_timer = 0.0
+
 
             for flap_row in self.rows:
                 flap_row.update(dt)
