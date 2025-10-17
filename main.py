@@ -10,6 +10,7 @@ from constants import *
 
 class SplitFlap:
     """A single split-flap character with a two-phase flip animation."""
+    STYLE = "classic"
     def __init__(self, x, y, w, h, font):
         self.rect = pygame.Rect(x, y, w, h)
         self.font = font
@@ -103,90 +104,180 @@ class SplitFlap:
 
     def draw(self, surface):
         r = self.rect
-        # Slot background and bezel
         FLAP_BORDER_RADIUS = 4
-        pygame.draw.rect(surface, SLOT_COLOR, r, border_radius=FLAP_BORDER_RADIUS)
+
+        # --- Bezel color by style ---
+        if self.STYLE == "classic":
+            bezel_color = tuple(max(0, c - 25) for c in SLOT_COLOR)
+        elif self.STYLE == "matte":
+            bezel_color = tuple(min(255, c + 10) for c in SLOT_COLOR)
+        elif self.STYLE == "retro":
+            bezel_color = (max(0, SLOT_COLOR[0]-40), SLOT_COLOR[1], SLOT_COLOR[2])
+        elif self.STYLE == "paper":
+            bezel_color = tuple(min(255, c + 40) for c in SLOT_COLOR)
+        else:
+            bezel_color = SLOT_COLOR
+
+        # --- Draw slot and shadow ---
+        pygame.draw.rect(surface, bezel_color, r, border_radius=FLAP_BORDER_RADIUS)
         pygame.draw.rect(surface, ACCENT, r, width=2, border_radius=FLAP_BORDER_RADIUS)
         surface.blit(self.shadow_surf, r.topleft)
 
-        # Prepare glyph surfaces for current and next
+        # --- Glyphs ---
         glyph_cur = self.font.render(self.current, True, TEXT_COLOR)
         glyph_next = self.font.render(self.next_char if self.next_char else self.current, True, TEXT_COLOR)
-
-        # Center glyphs
         gc_rect = glyph_cur.get_rect(center=r.center)
         gn_rect = glyph_next.get_rect(center=r.center)
 
-        # Draw depending on state
+        # --- Idle state ---
         if self.state == 'idle':
             surface.blit(glyph_cur, gc_rect)
             return
 
-        # Compute hinge animation progress 0..1
+        # --- Motion progress ---
         if self.state == 'closing':
             p = min(1.0, self.timer / FLIP_CLOSE_TIME + random.uniform(-0.005, -0.005))
-            # Top half folds down (covering current)
             self._draw_flip(surface, glyph_cur, glyph_next, gc_rect, gn_rect, p, phase='close')
         elif self.state == 'opening':
             p = min(1.0, self.timer / FLIP_OPEN_TIME + random.uniform(-0.005, -0.005))
-            # Bottom half opens to reveal the (committed) current
             self._draw_flip(surface, glyph_cur, glyph_next, gc_rect, gn_rect, p, phase='open')
+
+            r = self.rect
+            # Slot background and bezel
+            FLAP_BORDER_RADIUS = 4
+            if self.STYLE == "classic":
+                bezel_color = tuple(max(0, c - 25) for c in SLOT_COLOR)
+            else:
+                bezel_color = SLOT_COLOR
+
+            pygame.draw.rect(surface, bezel_color, r, border_radius=FLAP_BORDER_RADIUS)
+            pygame.draw.rect(surface, ACCENT, r, width=2, border_radius=FLAP_BORDER_RADIUS)
+            surface.blit(self.shadow_surf, r.topleft)
+
+            # Prepare glyph surfaces for current and next
+            glyph_cur = self.font.render(self.current, True, TEXT_COLOR)
+            glyph_next = self.font.render(self.next_char if self.next_char else self.current, True, TEXT_COLOR)
+
+            # Center glyphs
+            gc_rect = glyph_cur.get_rect(center=r.center)
+            gn_rect = glyph_next.get_rect(center=r.center)
+
+            # Draw depending on state
+            if self.state == 'idle':
+                surface.blit(glyph_cur, gc_rect)
+                return
+
+            # Compute hinge animation progress 0..1
+            if self.state == 'closing':
+                p = min(1.0, self.timer / FLIP_CLOSE_TIME + random.uniform(-0.005, -0.005))
+                # Top half folds down (covering current)
+                self._draw_flip(surface, glyph_cur, glyph_next, gc_rect, gn_rect, p, phase='close')
+            elif self.state == 'opening':
+                p = min(1.0, self.timer / FLIP_OPEN_TIME + random.uniform(-0.005, -0.005))
+                # Bottom half opens to reveal the (committed) current
+                self._draw_flip(surface, glyph_cur, glyph_next, gc_rect, gn_rect, p, phase='open')
 
     def _draw_flip(self, surface, glyph_cur, glyph_next, gc_rect, gn_rect, p, phase):
         r = self.rect
-        cx, cy = r.center
 
-        # Pre-render halves for current and next
-        # Surfaces matching cell size
+        # Pre-render halves
         cell = pygame.Surface((r.w, r.h), pygame.SRCALPHA)
         cell_cur = cell.copy(); cell_next = cell.copy()
         cell_cur.blit(glyph_cur, gc_rect.move(-r.x, -r.y))
         cell_next.blit(glyph_next, gn_rect.move(-r.x, -r.y))
 
-        # Compute fold amount
-        # Map progress to a smooth easing for nicer motion
-        def ease_in_out(s):
-            return 0.5 - 0.5 * math.cos(math.pi * s)
-        pe = ease_in_out(p)
+        # --- Easing function variations ---
+        def ease_in_out(s): return 0.5 - 0.5 * math.cos(math.pi * s)
+        def ease_out_back(x, overshoot=1.25): return 1 + overshoot * ((x - 1)**3 + (x - 1)**2)
+
+        if self.STYLE == "classic" and phase == "open":
+            pe = ease_out_back(p)
+        elif self.STYLE == "retro":
+            pe = ease_in_out(p * random.uniform(0.95, 1.05))  # slight jitter
+        else:
+            pe = ease_in_out(p)
 
         top_rect = pygame.Rect(0, 0, r.w, r.h//2)
         bot_rect = pygame.Rect(0, r.h//2, r.w, r.h - r.h//2)
 
-        # Masks for shading hinge line
-        hinge_alpha = int(120 * (0.3 + 0.7 * pe))
-        hinge_line = pygame.Surface((r.w, 2), pygame.SRCALPHA)
-        hinge_line.fill((0,0,0, hinge_alpha))
+        # --- Hinge shadow by style ---
+        if self.STYLE == "classic":
+            hinge_alpha = int(180 * (0.4 + 0.6 * pe))
+        elif self.STYLE == "matte":
+            hinge_alpha = int(80 * (0.2 + 0.8 * pe))
+        elif self.STYLE == "retro":
+            hinge_alpha = int(160 * (0.3 + 0.7 * pe))
+        elif self.STYLE == "paper":
+            hinge_alpha = 0
+        else:
+            hinge_alpha = int(120 * (0.3 + 0.7 * pe))
 
-        # Base: draw current glyph fully, then overlay animated flap
+        hinge_line = pygame.Surface((r.w, 2), pygame.SRCALPHA)
+        hinge_line.fill((0, 0, 0, hinge_alpha))
+
+        # --- Draw static base glyph ---
         surface.blit(cell_cur, r.topleft)
 
+        # --- Draw motion halves ---
         if phase == 'close':
-            # Top half folds down over the current
             fold_h = int((r.h//2) * (1 - pe))
             if fold_h > 0:
-                # Visible remaining top of current
                 visible_top = cell_cur.subsurface(pygame.Rect(0, 0, r.w, fold_h))
                 surface.blit(visible_top, (r.x, r.y))
-            # Draw flipping top from next glyph to simulate the blur of numbers cycling
             flipped = cell_next.subsurface(top_rect)
-            # Scale top half vertically toward zero around hinge
             target_h = max(1, int((r.h//2) * (0.15 + 0.85 * (1 - pe))))
             scaled = pygame.transform.smoothscale(flipped, (r.w, target_h))
             surface.blit(scaled, (r.x, r.y + (r.h//2 - target_h)))
             surface.blit(hinge_line, (r.x, r.y + r.h//2 - 1))
+
         else:
-            # Opening phase: bottom half of the new current unfolds
             fold_h = int((r.h//2) * pe)
             if fold_h < (r.h//2):
-                # Keep top half visible
                 visible_top = cell_cur.subsurface(top_rect)
                 surface.blit(visible_top, (r.x, r.y))
-            # Bottom unfolding
             flipped = cell_cur.subsurface(bot_rect)
             target_h = max(1, int((r.h//2) * (0.15 + 0.85 * pe)))
             scaled = pygame.transform.smoothscale(flipped, (r.w, target_h))
             surface.blit(scaled, (r.x, r.y + r.h//2))
             surface.blit(hinge_line, (r.x, r.y + r.h//2 - 1))
+
+        # --- Additional style effects ---
+        if self.STYLE == "classic":
+            # Metallic reflection during motion
+            if phase == "open" and 0.2 < p < 0.8:
+                ref = pygame.Surface((r.w, 2), pygame.SRCALPHA)
+                alpha = int(80 * (1 - abs(0.5 - p) * 2))
+                ref.fill((255, 255, 255, alpha))
+                surface.blit(ref, (r.x, r.y + r.h//2 - 2))
+
+            # Central highlight gradient
+            grad = pygame.Surface((r.w, r.h), pygame.SRCALPHA)
+            for y in range(r.h):
+                brightness = int(30 * (1 - abs((y - r.h/2) / (r.h/2))))
+                pygame.draw.line(grad, (brightness, brightness, brightness, 40), (0, y), (r.w, y))
+            surface.blit(grad, r.topleft, special_flags=pygame.BLEND_RGBA_ADD)
+
+        elif self.STYLE == "matte":
+            # Soft ambient light fade
+            grad = pygame.Surface((r.w, r.h), pygame.SRCALPHA)
+            for y in range(r.h):
+                shade = int(10 * (1 - y / r.h))
+                pygame.draw.line(grad, (shade, shade, shade, 25), (0, y), (r.w, y))
+            surface.blit(grad, r.topleft, special_flags=pygame.BLEND_RGBA_SUB)
+
+        elif self.STYLE == "retro":
+            # Flickering highlight
+            if random.random() < 0.3 and phase == "open":
+                flicker = pygame.Surface((r.w, 2), pygame.SRCALPHA)
+                flicker.fill((255, 220, 180, random.randint(40, 90)))
+                surface.blit(flicker, (r.x, r.y + r.h//2 - 1))
+
+        elif self.STYLE == "paper":
+            # Slight shadow offset to mimic paper layer
+            paper_shadow = pygame.Surface((r.w, r.h), pygame.SRCALPHA)
+            paper_shadow.fill((0, 0, 0, 15))
+            surface.blit(paper_shadow, (r.x + 1, r.y + 1))
+
 
 class FlapRow:
     def __init__(self, x, y, n_chars, font):
@@ -279,7 +370,8 @@ class App:
         pygame.display.set_caption("Split-Flap Display – Demo")
         pygame.mixer.pre_init(44100, -16, 2, 256)
         pygame.mixer.init()
-        self.screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
+        self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+        SCREEN_W, SCREEN_H = self.screen.get_size()
         self.clock = pygame.time.Clock()
         initial_weather = fetch_weather_update()
         self.text_a = initial_weather
@@ -287,7 +379,7 @@ class App:
 
         # Fonts
         font_path = "./fonts/DepartureMono-Regular.otf"
-        self.font = pygame.font.Font(font_path, 44)
+        self.font = pygame.font.Font(font_path, 64)
 
         self.sounds = []
 
@@ -386,6 +478,10 @@ class App:
                         running = False
                     elif event.key == pygame.K_SPACE:
                         self.toggle()
+                    elif event.key == pygame.K_d:
+                        styles = ["classic", "matte", "retro", "paper"]
+                        idx = styles.index(SplitFlap.STYLE)
+                        SplitFlap.STYLE = styles[(idx + 1) % len(styles)]
 
             # Auto-toggle 
             self.time_since_toggle += dt
