@@ -3,6 +3,8 @@ import sys
 import math
 import random
 import numpy as np
+import librosa
+import soundfile as sf
 
 SCREEN_W, SCREEN_H = 1200, 720
 FPS = 60
@@ -15,6 +17,8 @@ ACCENT = (40, 48, 56)
 # Character set typical of split-flap boards
 CHARSET = " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-/'#:"
 CHAR_INDEX = {c: i for i, c in enumerate(CHARSET)}
+
+SOUND_PATH = "./audio/single-flap.mp3"
 
 # Demo texts (must be same length for best effect; will be padded)
 TEXT_A = [
@@ -45,49 +49,17 @@ ROWS = 6
 COLS = 22
 
 # Animation timings (seconds)
-FLIP_CLOSE_TIME = 0.07   # top half folding down
-FLIP_OPEN_TIME = 0.09    # bottom half opening to reveal next
-INTER_FLAP_DELAY = 0.06  # cascade delay between neighboring cells
+FLIP_CLOSE_TIME = 0.06   # top half folding down
+FLIP_OPEN_TIME = 0.08    # bottom half opening to reveal next
+INTER_FLAP_DELAY = 0.03  # cascade delay between neighboring cells
 
 # Auto-toggle between A/B every N seconds
-TOGGLE_PERIOD = 6.0
+TOGGLE_PERIOD = 6.0 # You want to keep this for the update weather info
 
 # Sound configuration
 ENABLE_SOUND = True
 CLICK_VARIANTS = 5
 
-# ------------------------------
-# Audio: procedural click generator
-# ------------------------------
-
-def generate_click_sounds(variants=5, rate=44100):
-    """Generate a handful of slightly different mechanical click sounds."""
-    sounds = []
-    try:
-        for _ in range(variants):
-            dur = random.uniform(0.018, 0.028)  # seconds
-            n = int(rate * dur)
-            # Start with short burst noise + decaying high-pass character
-            t = np.linspace(0, dur, n, endpoint=False)
-            # Base: filtered noise envelope
-            noise = np.random.randn(n) * 0.35
-            # Add a resonant tap (brief sine) for bite
-            freq = random.uniform(2000, 3200)
-            tap = 0.6 * np.sin(2 * np.pi * freq * t) * np.exp(-t * random.uniform(20, 40))
-            sig = noise * np.exp(-t * random.uniform(35, 55)) + tap
-            # Clip and convert to int16 stereo
-            sig = np.clip(sig, -1.0, 1.0)
-            audio = (sig * 32767).astype(np.int16)
-            stereo = np.stack([audio, audio], axis=-1)
-            snd = pygame.mixer.Sound(buffer=stereo)
-            sounds.append(snd)
-        return sounds
-    except Exception:
-        return []
-
-# ------------------------------
-# Split-flap module
-# ------------------------------
 class SplitFlap:
     """A single split-flap character with a two-phase flip animation."""
     def __init__(self, x, y, w, h, font):
@@ -104,7 +76,11 @@ class SplitFlap:
         self._bake_shadow()
 
     def set_soundbank(self, sounds):
-        self.click_sounds = sounds
+        y, sr = librosa.load(SOUND_PATH, sr=None)
+        rate = 1.3
+        y_fast = librosa.effects.time_stretch(y, rate=1.5)
+        sf.write(f"./audio/split_flap_edited_rate_{rate}.mp3", y_fast, sr)
+        self.click_sounds = [pygame.mixer.Sound(f"./audio/split_flap_edited_rate_{rate}.mp3")]
 
     def _bake_shadow(self):
         surf = self.shadow_surf
@@ -165,8 +141,9 @@ class SplitFlap:
     def draw(self, surface):
         r = self.rect
         # Slot background and bezel
-        pygame.draw.rect(surface, SLOT_COLOR, r, border_radius=8)
-        pygame.draw.rect(surface, ACCENT, r, width=2, border_radius=8)
+        FLAP_BORDER_RADIUS = 3
+        pygame.draw.rect(surface, SLOT_COLOR, r, border_radius=FLAP_BORDER_RADIUS)
+        pygame.draw.rect(surface, ACCENT, r, width=2, border_radius=FLAP_BORDER_RADIUS)
         surface.blit(self.shadow_surf, r.topleft)
 
         # Prepare glyph surfaces for current and next
