@@ -5,56 +5,8 @@ import random
 import numpy as np
 import librosa
 import soundfile as sf
-
-SCREEN_W, SCREEN_H = 1200, 720
-FPS = 60
-BG_COLOR = (10, 12, 14)
-BOARD_COLOR = (18, 20, 24)
-SLOT_COLOR = (8, 9, 10)
-TEXT_COLOR = (230, 232, 235)
-ACCENT = (40, 48, 56)
-
-# Character set typical of split-flap boards
-CHARSET = " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-/'#:"
-CHAR_INDEX = {c: i for i, c in enumerate(CHARSET)}
-
-SOUND_PATH = "./audio/single-flap.mp3"
-
-# Demo texts (must be same length for best effect; will be padded)
-TEXT_A = [
-    "NEW YORK  JFK  AA123 ",
-    "BOSTON     BOS  DL987",
-    "CHICAGO    ORD  UA452",
-    "LOS ANGELES LAX SW330",
-    "SEATTLE    SEA  AS808",
-    "MIAMI      MIA  AA455",
-]
-TEXT_B = [
-    "SAN DIEGO  SAN UA987 ",
-    "ATLANTA    ATL DL204",
-    "DALLAS     DFW AA540",
-    "DENVER     DEN UA311",
-    "PHOENIX    PHX SW209",
-    "LAS VEGAS  LAS NK701",
-]
-
-# Board / cell sizing
-CELL_W = 36
-CELL_H = 64
-CELL_GAP = 6
-TOP_MARGIN = 80
-LEFT_MARGIN = 40
-
-ROWS = 6
-COLS = 22
-
-# Animation timings (seconds)
-FLIP_CLOSE_TIME = 0.035   # top half folding down
-FLIP_OPEN_TIME = 0.045    # bottom half opening to reveal next
-INTER_FLAP_DELAY = 0.027  # cascade delay between neighboring cells
-
-# Auto-toggle between A/B every N seconds
-TOGGLE_PERIOD = 6.0 # You want to keep this for the update weather info
+from london_weather import fetch_weather_update
+from constants import *
 
 class SplitFlap:
     """A single split-flap character with a two-phase flip animation."""
@@ -137,7 +89,7 @@ class SplitFlap:
     def draw(self, surface):
         r = self.rect
         # Slot background and bezel
-        FLAP_BORDER_RADIUS = 3
+        FLAP_BORDER_RADIUS = 4
         pygame.draw.rect(surface, SLOT_COLOR, r, border_radius=FLAP_BORDER_RADIUS)
         pygame.draw.rect(surface, ACCENT, r, width=2, border_radius=FLAP_BORDER_RADIUS)
         surface.blit(self.shadow_surf, r.topleft)
@@ -285,6 +237,9 @@ class App:
         pygame.mixer.init()
         self.screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
         self.clock = pygame.time.Clock()
+        initial_weather = fetch_weather_update()
+        self.text_a = initial_weather
+        self.text_b = initial_weather
 
         # Fonts
         font_path = "./fonts/DepartureMono-Regular.otf"
@@ -305,8 +260,9 @@ class App:
             self.rows.append(row)
 
         # Initialize with normalized A and schedule flip to B
-        self.current_rows = self._normalize_rows(TEXT_A)
-        self.alt_rows = self._normalize_rows(TEXT_B)
+        self.current_rows = self._normalize_rows(self.text_a)
+        self.text_b = fetch_weather_update() # Updating new weather
+        self.alt_rows = self._normalize_rows(self.text_b)
         for flap_row, text in zip(self.rows, self.current_rows):
             flap_row.set_text_immediate(text)
 
@@ -341,8 +297,10 @@ class App:
                     elif event.key == pygame.K_SPACE:
                         self.toggle()
 
-            # Auto-toggle every TOGGLE_PERIOD seconds
+            # Auto-toggle 
             self.time_since_toggle += dt
+            if self.time_since_toggle >= TOGGLE_PERIOD:
+                self.toggle()
 
             for flap_row in self.rows:
                 flap_row.update(dt)
