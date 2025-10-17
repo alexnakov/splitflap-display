@@ -49,9 +49,9 @@ ROWS = 6
 COLS = 22
 
 # Animation timings (seconds)
-FLIP_CLOSE_TIME = 0.06   # top half folding down
-FLIP_OPEN_TIME = 0.08    # bottom half opening to reveal next
-INTER_FLAP_DELAY = 0.03  # cascade delay between neighboring cells
+FLIP_CLOSE_TIME = 0.035   # top half folding down
+FLIP_OPEN_TIME = 0.045    # bottom half opening to reveal next
+INTER_FLAP_DELAY = 0.027  # cascade delay between neighboring cells
 
 # Auto-toggle between A/B every N seconds
 TOGGLE_PERIOD = 6.0 # You want to keep this for the update weather info
@@ -120,13 +120,13 @@ class SplitFlap:
             return
 
         self.timer += dt
-        if self.state == 'closing' and self.timer >= FLIP_CLOSE_TIME:
+        if self.state == 'closing' and self.timer >= FLIP_CLOSE_TIME + random.uniform(-0.005, -0.005):
             # Commit to next char when fully closed
             self.current = self.next_char
             self.timer = 0.0
             self.state = 'opening'
             self._play_click()
-        elif self.state == 'opening' and self.timer >= FLIP_OPEN_TIME:
+        elif self.state == 'opening' and self.timer >= FLIP_OPEN_TIME + random.uniform(-0.005, -0.005):
             # Decide whether to continue flipping toward target
             self.timer = 0.0
             if self.current == self.target:
@@ -157,11 +157,11 @@ class SplitFlap:
 
         # Compute hinge animation progress 0..1
         if self.state == 'closing':
-            p = min(1.0, self.timer / FLIP_CLOSE_TIME)
+            p = min(1.0, self.timer / FLIP_CLOSE_TIME + random.uniform(-0.005, -0.005))
             # Top half folds down (covering current)
             self._draw_flip(surface, glyph_cur, glyph_next, gc_rect, gn_rect, p, phase='close')
         elif self.state == 'opening':
-            p = min(1.0, self.timer / FLIP_OPEN_TIME)
+            p = min(1.0, self.timer / FLIP_OPEN_TIME + random.uniform(-0.005, -0.005))
             # Bottom half opens to reveal the (committed) current
             self._draw_flip(surface, glyph_cur, glyph_next, gc_rect, gn_rect, p, phase='open')
 
