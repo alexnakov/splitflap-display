@@ -79,8 +79,6 @@ class SplitFlap:
         self.timer = 0.0
         self._play_click()
 
-
-
     def update(self, dt):
         if self.state == 'idle':
             if self.current != self.target:
@@ -412,7 +410,6 @@ class App:
                 self.refresh_random_row()
                 self.row_refresh_timer = 0.0
 
-
             # --- Full board random refresh timer ---
             if not hasattr(self, "refresh_timer"):
                 self.refresh_timer = 0.0
@@ -421,8 +418,6 @@ class App:
             if self.refresh_timer >= FULLBOARD_REFRESH_TIMER:  # every 60 seconds
                 self.refresh_board()
                 self.refresh_timer = 0.0
-
-
 
             for flap_row in self.rows:
                 flap_row.update(dt)
