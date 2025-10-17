@@ -49,12 +49,12 @@ ROWS = 6
 COLS = 22
 
 # Animation timings (seconds)
-FLIP_CLOSE_TIME = 0.07   # top half folding down
-FLIP_OPEN_TIME = 0.09    # bottom half opening to reveal next
-INTER_FLAP_DELAY = 0.06  # cascade delay between neighboring cells
+FLIP_CLOSE_TIME = 0.06   # top half folding down
+FLIP_OPEN_TIME = 0.08    # bottom half opening to reveal next
+INTER_FLAP_DELAY = 0.03  # cascade delay between neighboring cells
 
 # Auto-toggle between A/B every N seconds
-TOGGLE_PERIOD = 6.0
+TOGGLE_PERIOD = 6.0 # You want to keep this for the update weather info
 
 # Sound configuration
 ENABLE_SOUND = True
@@ -141,8 +141,9 @@ class SplitFlap:
     def draw(self, surface):
         r = self.rect
         # Slot background and bezel
-        pygame.draw.rect(surface, SLOT_COLOR, r, border_radius=8)
-        pygame.draw.rect(surface, ACCENT, r, width=2, border_radius=8)
+        FLAP_BORDER_RADIUS = 3
+        pygame.draw.rect(surface, SLOT_COLOR, r, border_radius=FLAP_BORDER_RADIUS)
+        pygame.draw.rect(surface, ACCENT, r, width=2, border_radius=FLAP_BORDER_RADIUS)
         surface.blit(self.shadow_surf, r.topleft)
 
         # Prepare glyph surfaces for current and next
