@@ -20,7 +20,8 @@ class SplitFlap:
         self.timer = 0.0
         self.click_sounds = []
         self.shadow_surf = pygame.Surface((w, h), pygame.SRCALPHA)
-        # Precompute a subtle inner shadow for depth
+        self.flip_close_time = FLIP_CLOSE_TIME + random.uniform(-0.005, -0.005)
+        self.flip_open_time = FLIP_OPEN_TIME + random.uniform(-0.005, -0.005)
         self._bake_shadow()
 
     def set_soundbank(self, sounds):
@@ -59,15 +60,30 @@ class SplitFlap:
         ni = (ci + 1) % len(CHARSET)
         self.next_char = CHARSET[ni]
 
-    def start_flip(self, ghost=False):
+    def start_flip(self, ghost=False, wave=False):
         self.ghost = ghost
+        self.wave = wave
         self._advance_char()
-        # If ghost, don't change to next character permanently
-        if ghost:
+
+        close_time = FLIP_CLOSE_TIME
+        open_time  = FLIP_OPEN_TIME
+        
+        if ghost and not wave:
+            close_time *= 10.0   # slower for subtle ghost flips
+            open_time  *= 10.0
             self.next_char = self.current
+        elif wave:
+            close_time *= 1.0   # even slower, smooth mechanical wave
+            open_time  *= 1.0
+            self.next_char = self.current
+
+        self.flip_close_time = close_time
+        self.flip_open_time  = open_time
+
         self.state = 'closing'
         self.timer = 0.0
         self._play_click()
+
 
 
     def update(self, dt):
@@ -77,13 +93,13 @@ class SplitFlap:
             return
 
         self.timer += dt
-        if self.state == 'closing' and self.timer >= FLIP_CLOSE_TIME + random.uniform(-0.005, -0.005):
+        if self.state == 'closing' and self.timer >= self.flip_close_time:
             # Commit to next char when fully closed
             self.current = self.next_char
             self.timer = 0.0
             self.state = 'opening'
             self._play_click()
-        elif self.state == 'opening' and self.timer >= FLIP_OPEN_TIME + random.uniform(-0.005, -0.005):
+        elif self.state == 'opening' and self.timer >= self.flip_open_time:
             # Decide whether to continue flipping toward target
             self.timer = 0.0
             if self.current == self.target:
@@ -251,7 +267,6 @@ class FlapRow:
                 new_pending.append((f, f.current, delay))
             delay += 0.02  # time between each flap in this row
 
-        # Use the same pending queue idea as normal flip_to()
         if new_pending:
             self.pending_wave = new_pending
 
@@ -267,13 +282,19 @@ class FlapRow:
                     new_pending.append((f, c, delay))
             self.pending = new_pending if new_pending else None
 
+                # Detect if all flaps are idle (finished flipping)
+        if not self.pending and all(f.state == 'idle' for f in self.flaps):
+            if hasattr(self, 'on_complete') and callable(self.on_complete):
+                self.on_complete(self)
+                self.on_complete = None  # only trigger once
+
         # --- NEW: handle wave pending ---
         if hasattr(self, "pending_wave") and self.pending_wave:
             new_wave = []
             for f, c, delay in self.pending_wave:
                 delay -= dt
                 if delay <= 0:
-                    f.start_flip(ghost=True)
+                    f.start_flip(ghost=True, wave=True)
                 else:
                     new_wave.append((f, c, delay))
             self.pending_wave = new_wave if new_wave else None
@@ -339,6 +360,34 @@ class App:
             flap_row.flip_to(text)
         self.time_since_toggle = 0.0
     
+    def refresh_board(self):
+        """Force a full random refresh, then return to intended text."""
+        print("Refreshing board...")
+        self.is_refreshing = True
+        self.random_rows = []
+        for _ in range(ROWS):
+            # Generate random placeholder text same width as board
+            rand_text = ''.join(random.choice(CHARSET) for _ in range(COLS))
+            self.random_rows.append(rand_text)
+
+        # Flip all rows to random text first
+        for flap_row, text in zip(self.rows, self.random_rows):
+            flap_row.flip_to(text)
+
+        for flap_row in self.rows:
+            flap_row.on_complete = lambda row, app=self: app.on_refresh_complete()
+
+
+    def on_refresh_complete(self):
+        """Callback when all rows finish random pass."""
+        if getattr(self, "is_refreshing", False):
+            print("Random refresh complete → returning to intended text.")
+            self.is_refreshing = False
+            # Flip back to current intended text
+            for flap_row, text in zip(self.rows, self.current_rows):
+                flap_row.flip_to(text)
+
+    
     def trigger_wave_refresh(self):
         """Trigger a gentle wave of ghost flips across the board."""
         delay_step = 0.02  # seconds between each row start
@@ -382,6 +431,16 @@ class App:
             if self.wave_timer >= WAVE_TIMER:  
                 self.trigger_wave_refresh()
                 self.wave_timer = 0.0
+
+            # --- Full board random refresh timer ---
+            if not hasattr(self, "refresh_timer"):
+                self.refresh_timer = 0.0
+            self.refresh_timer += dt
+
+            if self.refresh_timer >= REFRESH_TIMER:  # every 60 seconds
+                self.refresh_board()
+                self.refresh_timer = 0.0
+
 
 
             for flap_row in self.rows:
