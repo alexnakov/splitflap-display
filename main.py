@@ -291,6 +291,8 @@ class App:
     def __init__(self):
         pygame.init()
         pygame.display.set_caption("Split-Flap Display – Demo")
+        pygame.mixer.pre_init(44100, -16, 2, 256)
+        pygame.mixer.init()
         self.screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
         self.clock = pygame.time.Clock()
 
@@ -300,18 +302,7 @@ class App:
         self.ui_font = pygame.font.SysFont("DejaVu Sans", 18)
         self.title_font = pygame.font.SysFont("DejaVu Sans", 22, bold=True)
 
-        # Audio
         self.sounds = []
-        if ENABLE_SOUND:
-            try:
-                pygame.mixer.pre_init(44100, -16, 2, 256)
-            except Exception:
-                pass
-        try:
-            pygame.mixer.init()
-            self.sounds = generate_click_sounds(CLICK_VARIANTS)
-        except Exception:
-            self.sounds = []
 
         # Build row sized to the longer of the two texts
         n_chars = COLS
