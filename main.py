@@ -1,3 +1,4 @@
+import argparse
 import pygame
 import sys
 import math
@@ -357,7 +358,7 @@ class FlapRow:
 
 
 class App:
-    def __init__(self):
+    def __init__(self, use_mock_weather=False):
         pygame.init()
         pygame.display.set_caption("Split-Flap Display – Demo")
         pygame.mixer.pre_init(44100, -16, 2, 256)
@@ -366,6 +367,7 @@ class App:
         SCREEN_W, SCREEN_H = self.screen.get_size()
         print(SCREEN_W, SCREEN_H)
         self.clock = pygame.time.Clock()
+        self.use_mock_weather = use_mock_weather
         self.locations = [loc["key"] for loc in WEATHER_LOCATIONS] or ["LONDON"]
         self.location_index = 0
         self._pending_location_index = None
@@ -408,7 +410,7 @@ class App:
     
     def _load_location_rows(self, location_key):
         try:
-            rows = fetch_weather_update(location_key)
+            rows = fetch_weather_update(location_key, use_mock=self.use_mock_weather)
         except Exception as exc:
             print(f"Failed to load weather for {location_key}: {exc}")
             rows = [
@@ -562,8 +564,15 @@ class App:
         pygame.quit()
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="Split-Flap Display Demo")
+    parser.add_argument(
+        "--mock-weather",
+        action="store_true",
+        help="use preset board data instead of fetching live weather",
+    )
+    args = parser.parse_args()
     try:
-        App().run()
+        App(use_mock_weather=args.mock_weather).run()
     except Exception as e:
         print("Error:", e)
         pygame.quit()

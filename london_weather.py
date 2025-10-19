@@ -33,6 +33,33 @@ _LOCATION_MAP: Dict[str, Dict[str, str]] = {
     loc["key"]: loc for loc in WEATHER_LOCATIONS
 }
 
+MOCK_WEATHER_BOARDS: Dict[str, List[str]] = {
+    "LONDON": [
+        "14 MAR 2024",
+        "LONDON - UK",
+        "LOCAL TIME 09:45",
+        "TEMP      12°C",
+        "RAIN      15%",
+        "BRISK SPRING BREEZE",
+    ],
+    "NEWARK_ON_TRENT": [
+        "14 MAR 2024",
+        "NEWARK-ON-TRENT UK",
+        "LOCAL TIME 09:45",
+        "TEMP       9°C",
+        "RAIN      05%",
+        "MIST LIFTING STEADY",
+    ],
+    "PLOVDIV": [
+        "14 MAR 2024",
+        "PLOVDIV BULGARIA",
+        "LOCAL TIME 11:45",
+        "TEMP      17°C",
+        "RAIN      25%",
+        "SUN WITH PASSING CLOUD",
+    ],
+}
+
 
 def _fetch_location_weather(location_key: str) -> Dict[str, Optional[float]]:
     """
@@ -93,7 +120,7 @@ def _fit(text: str, width: int = 22) -> str:
     return text.ljust(width)
 
 
-def fetch_weather_update(location_key: str) -> List[str]:
+def fetch_weather_update(location_key: str, use_mock: bool = False) -> List[str]:
     """
     Return 6 board lines (<=22 chars each) for the requested location.
     """
@@ -103,6 +130,11 @@ def fetch_weather_update(location_key: str) -> List[str]:
     location = _LOCATION_MAP.get(location_key.upper())
     if not location:
         raise ValueError(f"Unknown weather location '{location_key}'")
+
+    if use_mock:
+        mock_board = MOCK_WEATHER_BOARDS.get(location_key.upper())
+        if mock_board:
+            return [_fit(line) for line in mock_board]
 
     readings = _fetch_location_weather(location_key)
     tz = ZoneInfo(location["timezone"])
