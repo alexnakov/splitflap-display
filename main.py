@@ -1,10 +1,11 @@
+import argparse
 import pygame
 import sys
 import math
 import random
 import numpy as np
 import soundfile as sf
-from london_weather import fetch_weather_update
+from london_weather import fetch_weather_update, WEATHER_LOCATIONS
 from constants import *
 
 class SplitFlap:
@@ -357,7 +358,7 @@ class FlapRow:
 
 
 class App:
-    def __init__(self):
+    def __init__(self, use_mock_weather=False):
         pygame.init()
         pygame.display.set_caption("Split-Flap Display – Demo")
         pygame.mixer.pre_init(44100, -16, 2, 256)
@@ -366,9 +367,12 @@ class App:
         SCREEN_W, SCREEN_H = self.screen.get_size()
         print(SCREEN_W, SCREEN_H)
         self.clock = pygame.time.Clock()
-        initial_weather = fetch_weather_update()
-        self.text_a = initial_weather
-        self.text_b = initial_weather
+        self.use_mock_weather = use_mock_weather
+        self.locations = [loc["key"] for loc in WEATHER_LOCATIONS] or ["LONDON"]
+        self.location_index = 0
+        self._pending_location_index = None
+        self.current_location_key = self.locations[self.location_index]
+        initial_rows = self._load_location_rows(self.current_location_key)
 
         # Fonts
         font_path = "./fonts/DepartureMono-Regular.otf"
@@ -386,12 +390,13 @@ class App:
             self.rows.append(row)
 
         # Initialize with normalized A and schedule flip to B
-        self.current_rows = self._normalize_rows(self.text_a)
-        self.alt_rows = self._normalize_rows(fetch_weather_update()) # Getting weather and setting alt_text
+        self.current_rows = initial_rows
+        self.alt_rows = list(initial_rows)
         for flap_row, text in zip(self.rows, self.current_rows):
             flap_row.set_text_immediate(text)
 
         self.time_since_toggle = 0.0
+        self.is_refreshing = False
 
     def _normalize_rows(self, rows):
         normalized = []
@@ -402,6 +407,21 @@ class App:
                 row += ' ' * (COLS - len(row))
             normalized.append(row[:COLS])
         return normalized
+    
+    def _load_location_rows(self, location_key):
+        try:
+            rows = fetch_weather_update(location_key, use_mock=self.use_mock_weather)
+        except Exception as exc:
+            print(f"Failed to load weather for {location_key}: {exc}")
+            rows = [
+                f"{location_key} REPORT",
+                "DATA NOT AVAILABLE",
+                "PLEASE CHECK LATER",
+                " ",
+                " ",
+                " ",
+            ]
+        return self._normalize_rows(rows)
 
     def toggle(self):
         self.current_rows, self.alt_rows = self.alt_rows, self.current_rows
@@ -411,8 +431,12 @@ class App:
     
     def refresh_board(self):
         """Force a full random refresh, then return to intended text."""
+        if self.is_refreshing:
+            return
         print("Refreshing board...")
         self.is_refreshing = True
+        if self.locations:
+            self._pending_location_index = (self.location_index + 1) % len(self.locations)
         self.random_rows = []
         for _ in range(ROWS):
             # Generate random placeholder text same width as board
@@ -428,6 +452,8 @@ class App:
 
     def refresh_random_row(self):
         """Force a random refresh on one random row."""
+        if self.is_refreshing:
+            return
         row_idx = random.randint(0, len(self.rows) - 1)
         row = self.rows[row_idx]
 
@@ -447,12 +473,21 @@ class App:
 
     def on_refresh_complete(self):
         """Callback when all rows finish random pass."""
-        if getattr(self, "is_refreshing", False):
-            print("Random refresh complete → returning to intended text.")
-            self.is_refreshing = False
-            # Flip back to current intended text
-            for flap_row, text in zip(self.rows, self.current_rows):
-                flap_row.flip_to(text)
+        if not self.is_refreshing:
+            return
+
+        print("Random refresh complete → returning to intended text.")
+        if self._pending_location_index is not None and self.locations:
+            self.location_index = self._pending_location_index
+            self._pending_location_index = None
+            self.current_location_key = self.locations[self.location_index]
+            self.current_rows = self._load_location_rows(self.current_location_key)
+            self.alt_rows = list(self.current_rows)
+
+        self.is_refreshing = False
+        # Flip back to current intended text
+        for flap_row, text in zip(self.rows, self.current_rows):
+            flap_row.flip_to(text)
 
     def run(self):
         running = True
@@ -478,6 +513,9 @@ class App:
                         self.refresh_random_row()
                         self.row_refresh_timer = 0.0
                     elif event.key == pygame.K_f:
+                        self.refresh_board()
+                        self.refresh_timer = 0.0
+                    elif event.key == pygame.K_c:
                         self.refresh_board()
                         self.refresh_timer = 0.0
 
@@ -526,8 +564,15 @@ class App:
         pygame.quit()
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="Split-Flap Display Demo")
+    parser.add_argument(
+        "--mock-weather",
+        action="store_true",
+        help="use preset board data instead of fetching live weather",
+    )
+    args = parser.parse_args()
     try:
-        App().run()
+        App(use_mock_weather=args.mock_weather).run()
     except Exception as e:
         print("Error:", e)
         pygame.quit()
