@@ -1,81 +1,124 @@
-import requests
 import datetime
+from zoneinfo import ZoneInfo
+from typing import Dict, List, Optional
 
-def fetch_london_weather():
+import requests
+
+# Ordered list of locations to cycle through on the board
+WEATHER_LOCATIONS: List[Dict[str, str]] = [
+    {
+        "key": "LONDON",
+        "display": "LONDON - UK",
+        "latitude": 51.5074,
+        "longitude": -0.1278,
+        "timezone": "Europe/London",
+    },
+    {
+        "key": "NEWARK_ON_TRENT",
+        "display": "NEWARK-ON-TRENT UK",
+        "latitude": 53.0768,
+        "longitude": -0.8081,
+        "timezone": "Europe/London",
+    },
+    {
+        "key": "PLOVDIV",
+        "display": "PLOVDIV BULGARIA",
+        "latitude": 42.1354,
+        "longitude": 24.7453,
+        "timezone": "Europe/Sofia",
+    },
+]
+
+_LOCATION_MAP: Dict[str, Dict[str, str]] = {
+    loc["key"]: loc for loc in WEATHER_LOCATIONS
+}
+
+
+def _fetch_location_weather(location_key: str) -> Dict[str, Optional[float]]:
     """
-    Fetch current temperature and precipitation probability for London
-    using the free Open-Meteo API (no API key required).
-    Returns a dict with: temp_c, rain_prob, desc
+    Query Open-Meteo for the given location.
+    Returns a dict with temp_c, rain_prob, desc.
     """
-    lat, lon = 51.5074, -0.1278
+    config = _LOCATION_MAP.get(location_key.upper())
+    if not config:
+        raise ValueError(f"Unknown weather location '{location_key}'")
+
     url = (
         "https://api.open-meteo.com/v1/forecast"
-        f"?latitude={lat}&longitude={lon}"
+        f"?latitude={config['latitude']}&longitude={config['longitude']}"
         "&hourly=temperature_2m,precipitation_probability"
         "&current_weather=true"
-        "&timezone=Europe/London"
+        f"&timezone={config['timezone']}"
     )
+
     try:
-        r = requests.get(url, timeout=5)
-        r.raise_for_status()
-        data = r.json()
-        cw = data.get("current_weather", {})
-        temp = cw.get("temperature")
-        time_now = cw.get("time")
+        response = requests.get(url, timeout=5)
+        response.raise_for_status()
+        data = response.json()
+        current = data.get("current_weather", {})
+        temp = current.get("temperature")
+        current_time = current.get("time")
         rain_prob = None
 
-        # Try to extract rain probability from hourly data
-        hr = data.get("hourly", {})
-        times = hr.get("time", [])
-        probs = hr.get("precipitation_probability", [])
-        if time_now and times and probs:
+        hourly = data.get("hourly", {})
+        times = hourly.get("time", [])
+        probs = hourly.get("precipitation_probability", [])
+        if current_time and times and probs:
             try:
-                idx = times.index(time_now)
+                idx = times.index(current_time)
                 rain_prob = probs[idx]
             except ValueError:
                 pass
 
-        # Describe weather briefly
         if rain_prob is None:
-            desc = "WEATHER UNKNOWN"
+            desc = "WEATHER DATA UNAVAILABLE"
         elif rain_prob < 20:
-            desc = "SKIES CLEAR AND BRIGHT"
+            desc = "CLEAR SKIES EXPECTED"
         elif rain_prob < 50:
-            desc = "PARTLY CLOUDY MORNING"
+            desc = "PARTLY CLOUDY CONDITIONS"
         else:
-            desc = "SHOWERS EXPECTED LATER"
+            desc = "SHOWERS LIKELY PACK UMB"
 
         return {"temp_c": temp, "rain_prob": rain_prob, "desc": desc}
-    except Exception as e:
-        print("Weather fetch failed:", e)
+    except Exception as exc:
+        print(f"Weather fetch failed for {location_key}: {exc}")
         return {"temp_c": None, "rain_prob": None, "desc": "NO DATA AVAILABLE"}
 
-def fetch_weather_update():
+
+def _fit(text: str, width: int = 22) -> str:
+    """Trim or pad text to fit the split-flap cell width."""
+    text = text.strip().upper()
+    if len(text) > width:
+        return text[:width]
+    return text.ljust(width)
+
+
+def fetch_weather_update(location_key: str) -> List[str]:
     """
-    Returns a list of 6 strings (each <=22 chars) for a Station-Board Classic layout.
+    Return 6 board lines (<=22 chars each) for the requested location.
     """
-    w = fetch_london_weather()
-    location = "LONDON"
-    now = datetime.datetime.now(datetime.timezone.utc).astimezone()
-    timestr = now.strftime("%I:%M %p").lstrip("0")  # e.g. 7:45 AM
+    if not _LOCATION_MAP:
+        raise RuntimeError("No weather locations configured.")
 
-    temp = "--°C" if w["temp_c"] is None else f"{int(round(w['temp_c']))}°C"
-    rain = "--%" if w["rain_prob"] is None else f"{int(round(w['rain_prob']))}%"
-    desc = w["desc"][:22].upper()
+    location = _LOCATION_MAP.get(location_key.upper())
+    if not location:
+        raise ValueError(f"Unknown weather location '{location_key}'")
 
-    # Helper to fit strings cleanly to 22 chars
-    def fit(s, width=22, align="left"):
-        s = s.strip()
-        if len(s) > width:
-            s = s[:width]
-        return s.ljust(width) if align == "left" else s.rjust(width)
+    readings = _fetch_location_weather(location_key)
+    tz = ZoneInfo(location["timezone"])
+    now = datetime.datetime.now(tz)
 
-    board = [
-        fit(f"{location} MORNING REPORT"),
-        fit(f"TIME          {timestr}"),
-        fit(f"TEMP             {temp}"),
-        fit(f"RAIN PROB.         {rain}"),
-        fit(desc),
-        fit("HAVE A GOOD DAY!"),
+    date_line = now.strftime("%d %b %Y").upper()
+    time_line = now.strftime("%I:%M %p").lstrip("0")
+    temp_line = "--°C" if readings["temp_c"] is None else f"{int(round(readings['temp_c']))}°C"
+    rain_line = "--%" if readings["rain_prob"] is None else f"{int(round(readings['rain_prob']))}%"
+    desc_line = readings["desc"]
+
+    return [
+        _fit(date_line),
+        _fit(location["display"]),
+        _fit(f"LOCAL TIME {time_line}"),
+        _fit(f"TEMP {temp_line.rjust(6)}"),
+        _fit(f"RAIN {rain_line.rjust(6)}"),
+        _fit(desc_line),
     ]
-    return board
