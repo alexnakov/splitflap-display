@@ -14,18 +14,15 @@ class SplitFlap:
         self.rect = pygame.Rect(x, y, w, h)
         self.font = font
         self.current = ' '
-        self.target = ' '
         self.next_char = ' '
+        self.target = ' '
         self.state = 'idle'  # 'idle', 'closing', 'opening'
         self.timer = 0.0
-        self.click_sounds = []
+        self.click_sound = pygame.mixer.Sound(f"./audio/split_flap_edited_rate_1.5.mp3")
         self.shadow_surf = pygame.Surface((w, h), pygame.SRCALPHA)
-        self.flip_close_time = FLIP_CLOSE_TIME + random.uniform(-0.005, -0.005)
-        self.flip_open_time = FLIP_OPEN_TIME + random.uniform(-0.005, -0.005)
+        self.flip_close_time = FLIP_CLOSE_TIME 
+        self.flip_open_time = FLIP_OPEN_TIME 
         self._bake_shadow()
-
-    def set_soundbank(self, sounds):
-        self.click_sounds = [pygame.mixer.Sound(f"./audio/split_flap_edited_rate_1.5.mp3")]
 
     def _bake_shadow(self):
         surf = self.shadow_surf
@@ -37,65 +34,6 @@ class SplitFlap:
             alpha = int(darkness * (1 - i / border))
             pygame.draw.rect(surf, (0,0,0,alpha),
                              (i, i, self.rect.w - 2*i, self.rect.h - 2*i), 1, border_radius=6)
-
-    def set_char_immediate(self, c):
-        self.current = c if c in CHARSET else ' '
-        self.target = self.current
-        self.state = 'idle'
-        self.timer = 0
-
-    def queue_target(self, c):
-        self.target = c if c in CHARSET else ' '
-
-    def _play_click(self):
-        if self.click_sounds:
-            random.choice(self.click_sounds).play()
-
-    def _advance_char(self):
-        ci = CHAR_INDEX.get(self.current, 0)
-        ni = (ci + 1) % len(CHARSET)
-        self.next_char = CHARSET[ni]
-
-    def start_flip(self, ghost=False):
-        self.ghost = ghost
-        self._advance_char()
-
-        close_time = FLIP_CLOSE_TIME
-        open_time  = FLIP_OPEN_TIME
-        
-        if ghost:
-            close_time *= 10.0   # slower for subtle ghost flips
-            open_time  *= 10.0
-            self.next_char = self.current
-
-        self.flip_close_time = close_time
-        self.flip_open_time  = open_time
-
-        self.state = 'closing'
-        self.timer = 0.0
-        self._play_click()
-
-    def update(self, dt):
-        if self.state == 'idle':
-            if self.current != self.target:
-                self.start_flip()
-            return
-
-        self.timer += dt
-        if self.state == 'closing' and self.timer >= self.flip_close_time:
-            # Commit to next char when fully closed
-            self.current = self.next_char
-            self.timer = 0.0
-            self.state = 'opening'
-            self._play_click()
-        elif self.state == 'opening' and self.timer >= self.flip_open_time:
-            # Decide whether to continue flipping toward target
-            self.timer = 0.0
-            if self.current == self.target:
-                self.state = 'idle'
-                self.ghost = False
-            else:
-                self.start_flip()
 
     def draw(self, surface):
         r = self.rect
@@ -131,10 +69,10 @@ class SplitFlap:
 
         # --- Motion progress ---
         if self.state == 'closing':
-            p = min(1.0, self.timer / FLIP_CLOSE_TIME + random.uniform(-0.005, -0.005))
+            p = min(1.0, self.timer / FLIP_CLOSE_TIME)
             self._draw_flip(surface, glyph_cur, glyph_next, gc_rect, gn_rect, p, phase='close')
         elif self.state == 'opening':
-            p = min(1.0, self.timer / FLIP_OPEN_TIME + random.uniform(-0.005, -0.005))
+            p = min(1.0, self.timer / FLIP_OPEN_TIME)
             self._draw_flip(surface, glyph_cur, glyph_next, gc_rect, gn_rect, p, phase='open')
 
             r = self.rect
@@ -273,6 +211,69 @@ class SplitFlap:
             paper_shadow.fill((0, 0, 0, 15))
             surface.blit(paper_shadow, (r.x + 1, r.y + 1))
 
+    def _play_click(self):
+        if self.click_sound:
+            self.click_sound.play()
+    
+    def _advance_char(self):
+        """ It sets the next_char attr to the next char in CHARSET """
+        ci = CHAR_INDEX.get(self.current, 0)
+        ni = (ci + 1) % len(CHARSET)
+        self.next_char = CHARSET[ni]
+
+    def set_char_immediate(self, c):
+        """ No animation, it just initialise the characters """
+        self.current = c if c in CHARSET else ' '
+        self.target = self.current
+        self.state = 'idle'
+        self.timer = 0
+
+    def queue_target(self, c):
+        """ It sets the target character, unlike _advance_char which simply moves next_char
+         forward by one char. If character not in char set - set to ' '. """
+        self.target = c if c in CHARSET else ' '
+
+    def start_flip(self, ghost=False):
+        self.ghost = ghost
+        self._advance_char()
+
+        close_time = FLIP_CLOSE_TIME
+        open_time  = FLIP_OPEN_TIME
+        
+        if ghost:
+            close_time *= 10.0 
+            open_time  *= 10.0
+            self.next_char = self.current
+
+        self.flip_close_time = close_time
+        self.flip_open_time  = open_time
+
+        self.state = 'closing'
+        self.timer = 0.0
+        self._play_click()
+
+    def update(self, dt):
+        if self.state == 'idle':
+            if self.current != self.target:
+                self.start_flip()
+            return
+
+        self.timer += dt
+        if self.state == 'closing' and self.timer >= self.flip_close_time:
+            # Commit to next char when fully closed
+            self.current = self.next_char
+            self.timer = 0.0
+            self.state = 'opening'
+            self._play_click()
+        elif self.state == 'opening' and self.timer >= self.flip_open_time:
+            # Decide whether to continue flipping toward target
+            self.timer = 0.0
+            if self.current == self.target:
+                self.state = 'idle'
+                self.ghost = False
+            else:
+                self.start_flip()
+
 
 class FlapRow:
     def __init__(self, x, y, n_chars, font):
@@ -281,10 +282,6 @@ class FlapRow:
             cx = x + i * (CELL_W + CELL_GAP)
             self.flaps.append(SplitFlap(cx, y, CELL_W, CELL_H, font))
         self.pending = None
-
-    def set_soundbank(self, sounds):
-        for f in self.flaps:
-            f.set_soundbank(sounds)
 
     def set_text_immediate(self, text):
         text = self._normalize(text)
@@ -330,7 +327,7 @@ class FlapRow:
         for f in self.flaps:
             f.draw(surface)
 
-    def ghost_flip(self, probability=0.1):
+    def ghost_flip(self, probability=GHOST_PROBABILITY):
         """Trigger a small random ghost flip on some flaps."""
         for f in self.flaps:
             if random.random() < probability and f.state == 'idle':
@@ -367,6 +364,7 @@ class App:
         pygame.mixer.init()
         self.screen = pygame.display.set_mode((0, 0))
         SCREEN_W, SCREEN_H = self.screen.get_size()
+        print(SCREEN_W, SCREEN_H)
         self.clock = pygame.time.Clock()
         initial_weather = fetch_weather_update()
         self.text_a = initial_weather
@@ -375,8 +373,6 @@ class App:
         # Fonts
         font_path = "./fonts/DepartureMono-Regular.otf"
         self.font = pygame.font.Font(font_path, 64)
-
-        self.sounds = []
 
         # Build row sized to the longer of the two texts
         n_chars = COLS
@@ -387,13 +383,11 @@ class App:
         for i in range(ROWS):
             row_y = TOP_MARGIN + i * (CELL_H + CELL_GAP)
             row = FlapRow(start_x, row_y, n_chars, self.font)
-            row.set_soundbank(self.sounds)
             self.rows.append(row)
 
         # Initialize with normalized A and schedule flip to B
         self.current_rows = self._normalize_rows(self.text_a)
-        self.text_b = fetch_weather_update() # Updating new weather
-        self.alt_rows = self._normalize_rows(self.text_b)
+        self.alt_rows = self._normalize_rows(fetch_weather_update()) # Getting weather and setting alt_text
         for flap_row, text in zip(self.rows, self.current_rows):
             flap_row.set_text_immediate(text)
 
@@ -434,7 +428,6 @@ class App:
 
     def refresh_random_row(self):
         """Force a random refresh on one random row."""
-        print("Refreshing single row...")
         row_idx = random.randint(0, len(self.rows) - 1)
         row = self.rows[row_idx]
 
@@ -477,6 +470,16 @@ class App:
                         styles = ["classic", "matte", "retro", "paper"]
                         idx = styles.index(SplitFlap.STYLE)
                         SplitFlap.STYLE = styles[(idx + 1) % len(styles)]
+                    elif event.key == pygame.K_g:
+                        for flap_row in self.rows:
+                            flap_row.ghost_flip(probability=GHOST_PROBABILITY)
+                        self.ghost_timer = 0.0            
+                    elif event.key == pygame.K_r:
+                        self.refresh_random_row()
+                        self.row_refresh_timer = 0.0
+                    elif event.key == pygame.K_f:
+                        self.refresh_board()
+                        self.refresh_timer = 0.0
 
             # Auto-toggle 
             self.time_since_toggle += dt
@@ -489,7 +492,7 @@ class App:
             self.ghost_timer += dt
             if self.ghost_timer >= GHOST_TIMER:  # every 10 seconds
                 for flap_row in self.rows:
-                    flap_row.ghost_flip(probability=0.1)
+                    flap_row.ghost_flip(probability=GHOST_PROBABILITY)
                 self.ghost_timer = 0.0
 
             # --- Single-row random refresh timer ---
