@@ -18,14 +18,11 @@ class SplitFlap:
         self.target = ' '
         self.state = 'idle'  # 'idle', 'closing', 'opening'
         self.timer = 0.0
-        self.click_sounds = []
+        self.click_sound = pygame.mixer.Sound(f"./audio/split_flap_edited_rate_1.5.mp3")
         self.shadow_surf = pygame.Surface((w, h), pygame.SRCALPHA)
         self.flip_close_time = FLIP_CLOSE_TIME 
         self.flip_open_time = FLIP_OPEN_TIME 
         self._bake_shadow()
-
-    def set_soundbank(self, sounds):
-        self.click_sounds = [pygame.mixer.Sound(f"./audio/split_flap_edited_rate_1.5.mp3")]
 
     def _bake_shadow(self):
         surf = self.shadow_surf
@@ -48,8 +45,8 @@ class SplitFlap:
         self.target = c if c in CHARSET else ' '
 
     def _play_click(self):
-        if self.click_sounds:
-            random.choice(self.click_sounds).play()
+        if self.click_sound:
+            self.click_sound.play()
 
     def _advance_char(self):
         ci = CHAR_INDEX.get(self.current, 0)
@@ -131,10 +128,10 @@ class SplitFlap:
 
         # --- Motion progress ---
         if self.state == 'closing':
-            p = min(1.0, self.timer / FLIP_CLOSE_TIME 
+            p = min(1.0, self.timer / FLIP_CLOSE_TIME)
             self._draw_flip(surface, glyph_cur, glyph_next, gc_rect, gn_rect, p, phase='close')
         elif self.state == 'opening':
-            p = min(1.0, self.timer / FLIP_OPEN_TIME
+            p = min(1.0, self.timer / FLIP_OPEN_TIME)
             self._draw_flip(surface, glyph_cur, glyph_next, gc_rect, gn_rect, p, phase='open')
 
             r = self.rect
