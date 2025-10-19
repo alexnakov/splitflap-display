@@ -450,20 +450,6 @@ class App:
         for flap_row in self.rows:
             flap_row.on_complete = lambda row, app=self: app.on_refresh_complete()
 
-    def refresh_random_row(self):
-        """Force a random refresh on one random row."""
-        if self.is_refreshing:
-            return
-        row_idx = random.randint(0, len(self.rows) - 1)
-        row = self.rows[row_idx]
-
-        # Generate random placeholder text for that row
-        rand_text = ''.join(random.choice(CHARSET) for _ in range(COLS))
-        row.flip_to(rand_text)
-
-        # When done, flip back to intended text
-        row.on_complete = lambda r=row, app=self, idx=row_idx: app._restore_row(idx)
-
     def _restore_row(self, row_idx):
         """Return a refreshed row back to its intended text."""
         row = self.rows[row_idx]
@@ -509,9 +495,6 @@ class App:
                         for flap_row in self.rows:
                             flap_row.ghost_flip(probability=GHOST_PROBABILITY)
                         self.ghost_timer = 0.0            
-                    elif event.key == pygame.K_r:
-                        self.refresh_random_row()
-                        self.row_refresh_timer = 0.0
                     elif event.key == pygame.K_f:
                         self.refresh_board()
                         self.refresh_timer = 0.0
@@ -532,15 +515,6 @@ class App:
                 for flap_row in self.rows:
                     flap_row.ghost_flip(probability=GHOST_PROBABILITY)
                 self.ghost_timer = 0.0
-
-            # --- Single-row random refresh timer ---
-            if not hasattr(self, "row_refresh_timer"):
-                self.row_refresh_timer = 0.0
-            self.row_refresh_timer += dt
-
-            if self.row_refresh_timer >= ROW_REFRESH_TIMER:  # every 5 minutes
-                self.refresh_random_row()
-                self.row_refresh_timer = 0.0
 
             # --- Full board random refresh timer ---
             if not hasattr(self, "refresh_timer"):
