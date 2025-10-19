@@ -14,14 +14,14 @@ class SplitFlap:
         self.rect = pygame.Rect(x, y, w, h)
         self.font = font
         self.current = ' '
-        self.target = ' '
         self.next_char = ' '
+        self.target = ' '
         self.state = 'idle'  # 'idle', 'closing', 'opening'
         self.timer = 0.0
         self.click_sounds = []
         self.shadow_surf = pygame.Surface((w, h), pygame.SRCALPHA)
-        self.flip_close_time = FLIP_CLOSE_TIME + random.uniform(-0.005, -0.005)
-        self.flip_open_time = FLIP_OPEN_TIME + random.uniform(-0.005, -0.005)
+        self.flip_close_time = FLIP_CLOSE_TIME 
+        self.flip_open_time = FLIP_OPEN_TIME 
         self._bake_shadow()
 
     def set_soundbank(self, sounds):
@@ -131,10 +131,10 @@ class SplitFlap:
 
         # --- Motion progress ---
         if self.state == 'closing':
-            p = min(1.0, self.timer / FLIP_CLOSE_TIME + random.uniform(-0.005, -0.005))
+            p = min(1.0, self.timer / FLIP_CLOSE_TIME 
             self._draw_flip(surface, glyph_cur, glyph_next, gc_rect, gn_rect, p, phase='close')
         elif self.state == 'opening':
-            p = min(1.0, self.timer / FLIP_OPEN_TIME + random.uniform(-0.005, -0.005))
+            p = min(1.0, self.timer / FLIP_OPEN_TIME
             self._draw_flip(surface, glyph_cur, glyph_next, gc_rect, gn_rect, p, phase='open')
 
             r = self.rect
@@ -393,8 +393,7 @@ class App:
 
         # Initialize with normalized A and schedule flip to B
         self.current_rows = self._normalize_rows(self.text_a)
-        self.text_b = fetch_weather_update() # Updating new weather
-        self.alt_rows = self._normalize_rows(self.text_b)
+        self.alt_rows = self._normalize_rows(fetch_weather_update()) # Getting weather and setting alt_text
         for flap_row, text in zip(self.rows, self.current_rows):
             flap_row.set_text_immediate(text)
 
