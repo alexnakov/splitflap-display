@@ -35,69 +35,6 @@ class SplitFlap:
             pygame.draw.rect(surf, (0,0,0,alpha),
                              (i, i, self.rect.w - 2*i, self.rect.h - 2*i), 1, border_radius=6)
 
-    def _play_click(self):
-        if self.click_sound:
-            self.click_sound.play()
-    
-    def _advance_char(self):
-        """ It sets the next_char attr to the next char in CHARSET """
-        ci = CHAR_INDEX.get(self.current, 0)
-        ni = (ci + 1) % len(CHARSET)
-        self.next_char = CHARSET[ni]
-
-    def set_char_immediate(self, c):
-        """ No animation, it just initialise the characters """
-        self.current = c if c in CHARSET else ' '
-        self.target = self.current
-        self.state = 'idle'
-        self.timer = 0
-
-    def queue_target(self, c):
-        """ It sets the target character, unlike _advance_char which simply moves next_char
-         forward by one char. If character not in char set - set to ' '. """
-        self.target = c if c in CHARSET else ' '
-
-    def start_flip(self, ghost=False):
-        self.ghost = ghost
-        self._advance_char()
-
-        close_time = FLIP_CLOSE_TIME
-        open_time  = FLIP_OPEN_TIME
-        
-        if ghost:
-            close_time *= 10.0 
-            open_time  *= 10.0
-            self.next_char = self.current
-
-        self.flip_close_time = close_time
-        self.flip_open_time  = open_time
-
-        self.state = 'closing'
-        self.timer = 0.0
-        self._play_click()
-
-    def update(self, dt):
-        if self.state == 'idle':
-            if self.current != self.target:
-                self.start_flip()
-            return
-
-        self.timer += dt
-        if self.state == 'closing' and self.timer >= self.flip_close_time:
-            # Commit to next char when fully closed
-            self.current = self.next_char
-            self.timer = 0.0
-            self.state = 'opening'
-            self._play_click()
-        elif self.state == 'opening' and self.timer >= self.flip_open_time:
-            # Decide whether to continue flipping toward target
-            self.timer = 0.0
-            if self.current == self.target:
-                self.state = 'idle'
-                self.ghost = False
-            else:
-                self.start_flip()
-
     def draw(self, surface):
         r = self.rect
         FLAP_BORDER_RADIUS = 4
@@ -274,6 +211,69 @@ class SplitFlap:
             paper_shadow.fill((0, 0, 0, 15))
             surface.blit(paper_shadow, (r.x + 1, r.y + 1))
 
+    def _play_click(self):
+        if self.click_sound:
+            self.click_sound.play()
+    
+    def _advance_char(self):
+        """ It sets the next_char attr to the next char in CHARSET """
+        ci = CHAR_INDEX.get(self.current, 0)
+        ni = (ci + 1) % len(CHARSET)
+        self.next_char = CHARSET[ni]
+
+    def set_char_immediate(self, c):
+        """ No animation, it just initialise the characters """
+        self.current = c if c in CHARSET else ' '
+        self.target = self.current
+        self.state = 'idle'
+        self.timer = 0
+
+    def queue_target(self, c):
+        """ It sets the target character, unlike _advance_char which simply moves next_char
+         forward by one char. If character not in char set - set to ' '. """
+        self.target = c if c in CHARSET else ' '
+
+    def start_flip(self, ghost=False):
+        self.ghost = ghost
+        self._advance_char()
+
+        close_time = FLIP_CLOSE_TIME
+        open_time  = FLIP_OPEN_TIME
+        
+        if ghost:
+            close_time *= 10.0 
+            open_time  *= 10.0
+            self.next_char = self.current
+
+        self.flip_close_time = close_time
+        self.flip_open_time  = open_time
+
+        self.state = 'closing'
+        self.timer = 0.0
+        self._play_click()
+
+    def update(self, dt):
+        if self.state == 'idle':
+            if self.current != self.target:
+                self.start_flip()
+            return
+
+        self.timer += dt
+        if self.state == 'closing' and self.timer >= self.flip_close_time:
+            # Commit to next char when fully closed
+            self.current = self.next_char
+            self.timer = 0.0
+            self.state = 'opening'
+            self._play_click()
+        elif self.state == 'opening' and self.timer >= self.flip_open_time:
+            # Decide whether to continue flipping toward target
+            self.timer = 0.0
+            if self.current == self.target:
+                self.state = 'idle'
+                self.ghost = False
+            else:
+                self.start_flip()
+
 
 class FlapRow:
     def __init__(self, x, y, n_chars, font):
@@ -327,7 +327,7 @@ class FlapRow:
         for f in self.flaps:
             f.draw(surface)
 
-    def ghost_flip(self, probability=0.1):
+    def ghost_flip(self, probability=GHOST_PROBABILITY):
         """Trigger a small random ghost flip on some flaps."""
         for f in self.flaps:
             if random.random() < probability and f.state == 'idle':
@@ -472,7 +472,7 @@ class App:
                         SplitFlap.STYLE = styles[(idx + 1) % len(styles)]
                     elif event.key == pygame.K_g:
                         for flap_row in self.rows:
-                            flap_row.ghost_flip(probability=0.16)
+                            flap_row.ghost_flip(probability=GHOST_PROBABILITY)
                         self.ghost_timer = 0.0            
                     elif event.key == pygame.K_r:
                         self.refresh_random_row()
@@ -492,7 +492,7 @@ class App:
             self.ghost_timer += dt
             if self.ghost_timer >= GHOST_TIMER:  # every 10 seconds
                 for flap_row in self.rows:
-                    flap_row.ghost_flip(probability=0.16)
+                    flap_row.ghost_flip(probability=GHOST_PROBABILITY)
                 self.ghost_timer = 0.0
 
             # --- Single-row random refresh timer ---
