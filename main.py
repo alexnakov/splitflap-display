@@ -35,23 +35,27 @@ class SplitFlap:
             pygame.draw.rect(surf, (0,0,0,alpha),
                              (i, i, self.rect.w - 2*i, self.rect.h - 2*i), 1, border_radius=6)
 
+    def _play_click(self):
+        if self.click_sound:
+            self.click_sound.play()
+    
+    def _advance_char(self):
+        """ It sets the next_char attr to the next char in CHARSET """
+        ci = CHAR_INDEX.get(self.current, 0)
+        ni = (ci + 1) % len(CHARSET)
+        self.next_char = CHARSET[ni]
+
     def set_char_immediate(self, c):
+        """ No animation, it just initialise the characters """
         self.current = c if c in CHARSET else ' '
         self.target = self.current
         self.state = 'idle'
         self.timer = 0
 
     def queue_target(self, c):
+        """ It sets the target character, unlike _advance_char which simply moves next_char
+         forward by one char. If character not in char set - set to ' '. """
         self.target = c if c in CHARSET else ' '
-
-    def _play_click(self):
-        if self.click_sound:
-            self.click_sound.play()
-
-    def _advance_char(self):
-        ci = CHAR_INDEX.get(self.current, 0)
-        ni = (ci + 1) % len(CHARSET)
-        self.next_char = CHARSET[ni]
 
     def start_flip(self, ghost=False):
         self.ghost = ghost
@@ -61,7 +65,7 @@ class SplitFlap:
         open_time  = FLIP_OPEN_TIME
         
         if ghost:
-            close_time *= 10.0   # slower for subtle ghost flips
+            close_time *= 10.0 
             open_time  *= 10.0
             self.next_char = self.current
 
@@ -279,10 +283,6 @@ class FlapRow:
             self.flaps.append(SplitFlap(cx, y, CELL_W, CELL_H, font))
         self.pending = None
 
-    def set_soundbank(self, sounds):
-        for f in self.flaps:
-            f.set_soundbank(sounds)
-
     def set_text_immediate(self, text):
         text = self._normalize(text)
         for f, c in zip(self.flaps, text):
@@ -374,8 +374,6 @@ class App:
         font_path = "./fonts/DepartureMono-Regular.otf"
         self.font = pygame.font.Font(font_path, 64)
 
-        self.sounds = []
-
         # Build row sized to the longer of the two texts
         n_chars = COLS
         total_w = n_chars * CELL_W + (n_chars - 1) * CELL_GAP
@@ -385,7 +383,6 @@ class App:
         for i in range(ROWS):
             row_y = TOP_MARGIN + i * (CELL_H + CELL_GAP)
             row = FlapRow(start_x, row_y, n_chars, self.font)
-            row.set_soundbank(self.sounds)
             self.rows.append(row)
 
         # Initialize with normalized A and schedule flip to B
