@@ -367,6 +367,7 @@ class App:
         pygame.mixer.init()
         self.screen = pygame.display.set_mode((0, 0))
         SCREEN_W, SCREEN_H = self.screen.get_size()
+        print(SCREEN_W, SCREEN_H)
         self.clock = pygame.time.Clock()
         initial_weather = fetch_weather_update()
         self.text_a = initial_weather
@@ -434,7 +435,6 @@ class App:
 
     def refresh_random_row(self):
         """Force a random refresh on one random row."""
-        print("Refreshing single row...")
         row_idx = random.randint(0, len(self.rows) - 1)
         row = self.rows[row_idx]
 
@@ -477,6 +477,16 @@ class App:
                         styles = ["classic", "matte", "retro", "paper"]
                         idx = styles.index(SplitFlap.STYLE)
                         SplitFlap.STYLE = styles[(idx + 1) % len(styles)]
+                    elif event.key == pygame.K_g:
+                        for flap_row in self.rows:
+                            flap_row.ghost_flip(probability=0.16)
+                        self.ghost_timer = 0.0            
+                    elif event.key == pygame.K_r:
+                        self.refresh_random_row()
+                        self.row_refresh_timer = 0.0
+                    elif event.key == pygame.K_f:
+                        self.refresh_board()
+                        self.refresh_timer = 0.0
 
             # Auto-toggle 
             self.time_since_toggle += dt
@@ -489,7 +499,7 @@ class App:
             self.ghost_timer += dt
             if self.ghost_timer >= GHOST_TIMER:  # every 10 seconds
                 for flap_row in self.rows:
-                    flap_row.ghost_flip(probability=0.1)
+                    flap_row.ghost_flip(probability=0.16)
                 self.ghost_timer = 0.0
 
             # --- Single-row random refresh timer ---
