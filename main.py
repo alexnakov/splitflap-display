@@ -365,7 +365,7 @@ class App:
         pygame.display.set_caption("Split-Flap Display – Demo")
         pygame.mixer.pre_init(44100, -16, 2, 256)
         pygame.mixer.init()
-        self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+        self.screen = pygame.display.set_mode((0, 0))
         SCREEN_W, SCREEN_H = self.screen.get_size()
         self.clock = pygame.time.Clock()
         initial_weather = fetch_weather_update()
