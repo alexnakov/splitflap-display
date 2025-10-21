@@ -19,6 +19,7 @@ class SplitFlap:
         self.target = ' '
         self.state = 'idle'  # 'idle', 'closing', 'opening'
         self.timer = 0.0
+        self.force_cycles = 0
         self.click_sound = pygame.mixer.Sound(f"./audio/split_flap_edited_rate_1.5.mp3")
         self.shadow_surf = pygame.Surface((w, h), pygame.SRCALPHA)
         self.flip_close_time = FLIP_CLOSE_TIME 
@@ -227,12 +228,17 @@ class SplitFlap:
         self.current = c if c in CHARSET else ' '
         self.target = self.current
         self.state = 'idle'
+        self.force_cycles = 0
         self.timer = 0
 
     def queue_target(self, c):
         """ It sets the target character, unlike _advance_char which simply moves next_char
          forward by one char. If character not in char set - set to ' '. """
         self.target = c if c in CHARSET else ' '
+        if self.target == self.current:
+            self.force_cycles = len(CHARSET)
+        else:
+            self.force_cycles = 0
 
     def start_flip(self, ghost=False):
         self.ghost = ghost
@@ -255,7 +261,7 @@ class SplitFlap:
 
     def update(self, dt):
         if self.state == 'idle':
-            if self.current != self.target:
+            if self.force_cycles > 0 or self.current != self.target:
                 self.start_flip()
             return
 
@@ -269,7 +275,14 @@ class SplitFlap:
         elif self.state == 'opening' and self.timer >= self.flip_open_time:
             # Decide whether to continue flipping toward target
             self.timer = 0.0
-            if self.current == self.target:
+            if self.force_cycles > 0:
+                self.force_cycles -= 1
+                if self.force_cycles == 0 and self.current == self.target:
+                    self.state = 'idle'
+                    self.ghost = False
+                else:
+                    self.start_flip()
+            elif self.current == self.target:
                 self.state = 'idle'
                 self.ghost = False
             else:
