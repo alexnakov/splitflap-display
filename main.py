@@ -386,6 +386,8 @@ class App:
         self._pending_location_index = None
         self.current_location_key = self.locations[self.location_index]
         initial_rows = self._load_location_rows(self.current_location_key)
+        self.refresh_timer = 0.0
+        self.ghost_timer = 0.0
 
         # Fonts
         font_path = "./fonts/DepartureMono-Regular.otf"
@@ -436,12 +438,17 @@ class App:
             ]
         return self._normalize_rows(rows)
 
-    def toggle(self):
-        self.current_rows, self.alt_rows = self.alt_rows, self.current_rows
-        self.current_rows = TEXT_A
-        for flap_row, text in zip(self.rows, self.current_rows):
+    def refresh_board(self):
+        next_index = (self.location_index + 1) % len(self.locations)
+        next_key = self.locations[next_index]
+        next_rows = self._load_location_rows(next_key)
+        self.location_index = next_index
+        self.current_location_key = next_key
+        self.current_rows = list(next_rows)
+        self.alt_rows = list(next_rows)
+        for flap_row, text in zip(self.rows, next_rows):
             flap_row.flip_to(text)
-        self.time_since_toggle = 0.0
+        self.refresh_timer = 0.0
 
     def run(self):
         running = True
@@ -464,39 +471,17 @@ class App:
                             flap_row.ghost_flip(probability=GHOST_PROBABILITY)
                         self.ghost_timer = 0.0            
                     elif event.key == pygame.K_c:
-                        next_index = (self.location_index + 1) % len(self.locations)
-                        next_key = self.locations[next_index]
-                        next_rows = self._load_location_rows(next_key)
-                        self.location_index = next_index
-                        self.current_location_key = next_key
-                        self.current_rows = list(next_rows)
-                        self.alt_rows = list(next_rows)
-                        for flap_row, text in zip(self.rows, next_rows):
-                            flap_row.flip_to(text)
-                        self.time_since_toggle = 0.0
+                        self.refresh_board()
 
-            # Auto-toggle 
-            self.time_since_toggle += dt
-            if self.time_since_toggle >= TOGGLE_PERIOD:
-                self.toggle()
-
-            # --- Ghost flip timer ---
-            if not hasattr(self, "ghost_timer"):
-                self.ghost_timer = 0.0
-            self.ghost_timer += dt
+            # Ghost Timer
             if self.ghost_timer >= GHOST_TIMER:  # every 10 seconds
                 for flap_row in self.rows:
                     flap_row.ghost_flip(probability=GHOST_PROBABILITY)
                 self.ghost_timer = 0.0
 
-            # --- Full board random refresh timer ---
-            if not hasattr(self, "refresh_timer"):
-                self.refresh_timer = 0.0
-            self.refresh_timer += dt
-
+            # Board refresh
             if self.refresh_timer >= FULLBOARD_REFRESH_TIMER:  # every 60 seconds
-                self.refresh_board()
-                self.refresh_timer = 0.0
+                self.refresh_timer()
 
             for flap_row in self.rows:
                 flap_row.update(dt)
