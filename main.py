@@ -216,6 +216,7 @@ class SplitFlap:
             surface.blit(paper_shadow, (r.x + 1, r.y + 1))
 
     def _play_click(self):
+        self.click_sounds[0].set_volume(0.05)
         self.click_sounds[0].play()
     
     def _advance_char(self):
