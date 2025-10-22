@@ -223,7 +223,7 @@ class SplitFlap:
             surface.blit(paper_shadow, (r.x + 1, r.y + 1))
 
     def _play_click(self):
-        random.choice(self.click_sounds).play()
+        self.click_sounds[0].play()
     
     def _advance_char(self):
         """ It sets the next_char attr to the next char in CHARSET """
