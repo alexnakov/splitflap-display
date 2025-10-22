@@ -67,13 +67,14 @@ LEFT_MARGIN = int(LEFT_MARGIN * SCALE)
 
 
 # Animation timings (seconds)
-FLIP_CLOSE_TIME = 0.035   # top half folding down
-FLIP_OPEN_TIME = 0.045    # bottom half opening to reveal next
-INTER_FLAP_DELAY = 0.027  # cascade delay between neighboring cells
+FLIP_CLOSE_TIME = 0.032   # top half folding down
+FLIP_OPEN_TIME = 0.042    # bottom half opening to reveal next
+INTER_FLAP_DELAY = 0.029  # cascade delay between neighboring cells
 
 TOGGLE_PERIOD = 100.0 # Keeping super high for testing
 
 GHOST_TIMER = 30 # Secs
 FULLBOARD_REFRESH_TIMER = 60 * 6 # 6 mins
+REFRESH_DELAY = 7
 
 GHOST_PROBABILITY = 0.017
