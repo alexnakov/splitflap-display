@@ -390,7 +390,7 @@ class App:
         self.ghost_timer = 0.0
 
         # Fonts
-        font_path = "./fonts/DepartureMono-Regular.otf"
+        font_path = "fonts/DINMittelschriftStd.otf"
         self.font = pygame.font.Font(font_path, 64)
 
         # Build row sized to the longer of the two texts
