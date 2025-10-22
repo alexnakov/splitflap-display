@@ -6,7 +6,7 @@ TEXT_COLOR = (230, 232, 235)
 ACCENT = (40, 48, 56)
 
 # Character set typical of split-flap boards
-CHARSET = " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-/'#:"
+CHARSET = r" ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,-/'#:%°"
 CHAR_INDEX = {c: i for i, c in enumerate(CHARSET)}
 
 SOUND_PATH = "./audio/single-flap.mp3"

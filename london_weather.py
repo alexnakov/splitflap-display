@@ -35,28 +35,31 @@ _LOCATION_MAP: Dict[str, Dict[str, str]] = {
 
 MOCK_WEATHER_BOARDS: Dict[str, List[str]] = {
     "LONDON": [
-        "14 MAR 2024",
-        "LONDON - UK",
+        "LONDON, UK",
+        "",
         "LOCAL TIME 09:45",
-        "TEMP      12°C",
-        "RAIN      15%",
+        "TEMP       12°C",
+        r"RAIN       15%",
         "BRISK SPRING BREEZE",
+        ""
     ],
     "NEWARK_ON_TRENT": [
-        "14 MAR 2024",
-        "NEWARK-ON-TRENT UK",
+        "NEWARK-ON-TRENT, UK",
+        "",
         "LOCAL TIME 09:45",
-        "TEMP       9°C",
-        "RAIN      05%",
+        "TEMP       12°C",
+        r"RAIN       35%",
         "MIST LIFTING STEADY",
+        ""
     ],
     "PLOVDIV": [
-        "14 MAR 2024",
-        "PLOVDIV BULGARIA",
+        "PLOVDIV, BULGARIA",
+        "",
         "LOCAL TIME 11:45",
-        "TEMP      17°C",
-        "RAIN      25%",
+        "TEMP       12°C",
+        r"RAIN       25%",
         "SUN WITH PASSING CLOUD",
+        "",
     ],
 }
 
@@ -150,7 +153,7 @@ def fetch_weather_update(location_key: str, use_mock: bool = False) -> List[str]
         _fit(date_line),
         _fit(location["display"]),
         _fit(f"LOCAL TIME {time_line}"),
-        _fit(f"TEMP {temp_line.rjust(6)}"),
-        _fit(f"RAIN {rain_line.rjust(6)}"),
+        _fit(f"TEMPERATURE {temp_line.rjust(6)}"),
+        _fit(f"RAIN % {rain_line.rjust(6)}"),
         _fit(desc_line),
     ]
