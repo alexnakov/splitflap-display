@@ -384,9 +384,8 @@ class App:
         pygame.display.set_caption("Split-Flap Display – Demo")
         pygame.mixer.pre_init(44100, -16, 2, 256)
         pygame.mixer.init()
-        self.screen = pygame.display.set_mode((0, 0))
+        self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN, display=0)
         SCREEN_W, SCREEN_H = self.screen.get_size()
-        print(SCREEN_W, SCREEN_H)
         self.clock = pygame.time.Clock()
         self.use_mock_weather = use_mock_weather
         self.locations = [loc["key"] for loc in WEATHER_LOCATIONS] or ["LONDON"]
@@ -504,6 +503,10 @@ class App:
                 self.refresh_delay += dt
                 if self.refresh_delay >= REFRESH_DELAY:
                     self.refresh_last_row()
+
+            self.refresh_timer += dt
+            self.ghost_timer += dt
+
 
             for flap_row in self.rows:
                 flap_row.update(dt)
