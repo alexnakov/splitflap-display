@@ -5,7 +5,6 @@ import math
 import random
 import time
 import numpy as np
-import soundfile as sf
 from london_weather import fetch_weather_update, WEATHER_LOCATIONS
 from constants import *
 
@@ -26,13 +25,7 @@ class SplitFlap:
         self.flip_open_time = FLIP_OPEN_TIME 
         self._bake_shadow()
         self.click_sounds = [
-            pygame.mixer.Sound(f"./audio/sf-1.mp3"),
-            pygame.mixer.Sound(f"./audio/sf-2.mp3"),
-            pygame.mixer.Sound(f"./audio/sf-3.mp3"),
-            pygame.mixer.Sound(f"./audio/sf-4.mp3"),
-            pygame.mixer.Sound(f"./audio/sf-5.mp3"),
-            pygame.mixer.Sound(f"./audio/sf-6.mp3"),
-            pygame.mixer.Sound(f"./audio/sf-7.mp3"),
+            pygame.mixer.Sound(f"./audio/sf-1.mp3")
         ]
 
     def _bake_shadow(self):
