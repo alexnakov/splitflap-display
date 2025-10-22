@@ -20,11 +20,19 @@ class SplitFlap:
         self.state = 'idle'  # 'idle', 'closing', 'opening'
         self.timer = 0.0
         self.force_cycles = 0
-        self.click_sound = pygame.mixer.Sound(f"./audio/split_flap_edited_rate_1.5.mp3")
         self.shadow_surf = pygame.Surface((w, h), pygame.SRCALPHA)
         self.flip_close_time = FLIP_CLOSE_TIME 
         self.flip_open_time = FLIP_OPEN_TIME 
         self._bake_shadow()
+        self.click_sounds = [
+            pygame.mixer.Sound(f"./audio/sf-1.mp3"),
+            pygame.mixer.Sound(f"./audio/sf-2.mp3"),
+            pygame.mixer.Sound(f"./audio/sf-3.mp3"),
+            pygame.mixer.Sound(f"./audio/sf-4.mp3"),
+            pygame.mixer.Sound(f"./audio/sf-5.mp3"),
+            pygame.mixer.Sound(f"./audio/sf-6.mp3"),
+            pygame.mixer.Sound(f"./audio/sf-7.mp3"),
+        ]
 
     def _bake_shadow(self):
         surf = self.shadow_surf
@@ -214,8 +222,7 @@ class SplitFlap:
             surface.blit(paper_shadow, (r.x + 1, r.y + 1))
 
     def _play_click(self):
-        if self.click_sound:
-            self.click_sound.play()
+        random.choice(self.click_sounds).play()
     
     def _advance_char(self):
         """ It sets the next_char attr to the next char in CHARSET """
@@ -390,7 +397,7 @@ class App:
         self.ghost_timer = 0.0
 
         # Fonts
-        font_path = "./fonts/DepartureMono-Regular.otf"
+        font_path = "fonts/DINMittelschriftStd.otf"
         self.font = pygame.font.Font(font_path, 64)
 
         # Build row sized to the longer of the two texts
