@@ -8,21 +8,21 @@ import requests
 WEATHER_LOCATIONS: List[Dict[str, str]] = [
     {
         "key": "LONDON",
-        "display": "LONDON - UK",
+        "display": "LONDON, UK",
         "latitude": 51.5074,
         "longitude": -0.1278,
         "timezone": "Europe/London",
     },
     {
         "key": "NEWARK_ON_TRENT",
-        "display": "NEWARK-ON-TRENT UK",
+        "display": "NEWARK-ON-TRENT, UK",
         "latitude": 53.0768,
         "longitude": -0.8081,
         "timezone": "Europe/London",
     },
     {
         "key": "PLOVDIV",
-        "display": "PLOVDIV BULGARIA",
+        "display": "PLOVDIV, BULGARIA",
         "latitude": 42.1354,
         "longitude": 24.7453,
         "timezone": "Europe/Sofia",
@@ -144,16 +144,18 @@ def fetch_weather_update(location_key: str, use_mock: bool = False) -> List[str]
     now = datetime.datetime.now(tz)
 
     date_line = now.strftime("%d %b %Y").upper()
-    time_line = now.strftime("%I:%M %p").lstrip("0")
+    time_line = now.strftime("%I:%M %p")
+    if time_line.startswith("0"):
+        time_line = " " + time_line[1:]
     temp_line = "--°C" if readings["temp_c"] is None else f"{int(round(readings['temp_c']))}°C"
     rain_line = "--%" if readings["rain_prob"] is None else f"{int(round(readings['rain_prob']))}%"
     desc_line = readings["desc"]
 
     return [
-        _fit(date_line),
         _fit(location["display"]),
+        _fit(""),
         _fit(f"LOCAL TIME {time_line}"),
-        _fit(f"TEMPERATURE {temp_line.rjust(6)}"),
-        _fit(f"RAIN % {rain_line.rjust(6)}"),
+        _fit(f"TEMP" + 5*" " + f"{temp_line.rjust(6)}"),
+        _fit(f"RAIN" + 4*" " + f"{rain_line.rjust(6)}"),
         _fit(desc_line),
     ]
