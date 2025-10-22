@@ -16,6 +16,7 @@ packaging==25.0
 platformdirs==4.5.0
 pooch==1.8.2
 pycparser==2.23
+pydub==0.25.1
 pygame==2.6.1
 requests==2.32.5
 scikit-learn==1.7.2

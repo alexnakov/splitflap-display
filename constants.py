@@ -44,7 +44,7 @@ PX_PER_MM = SCREEN_W / MONITOR_WIDTH_MM
 # --- Base layout design ---
 CELL_W = 20
 CELL_H = int(CELL_W * (64 / 36))
-CELL_GAP = 6
+CELL_GAP = 3
 TOP_MARGIN = 40
 LEFT_MARGIN = 20
 ROWS = 6
@@ -67,14 +67,14 @@ LEFT_MARGIN = int(LEFT_MARGIN * SCALE)
 
 
 # Animation timings (seconds)
-FLIP_CLOSE_TIME = 0.032   # top half folding down
-FLIP_OPEN_TIME = 0.042    # bottom half opening to reveal next
-INTER_FLAP_DELAY = 0.029  # cascade delay between neighboring cells
+FLIP_CLOSE_TIME = 0.062   # top half folding down
+FLIP_OPEN_TIME = 0.052    # bottom half opening to reveal next
+INTER_FLAP_DELAY = 0.039  # cascade delay between neighboring cells
 
 TOGGLE_PERIOD = 100.0 # Keeping super high for testing
 
-GHOST_TIMER = 30 # Secs
-FULLBOARD_REFRESH_TIMER = 60 * 6 # 6 mins
-REFRESH_DELAY = 7
+GHOST_TIMER = 60 * 1 # 1 min
+FULLBOARD_REFRESH_TIMER = 60 * 8 # 8 mins
+REFRESH_DELAY = 9
 
 GHOST_PROBABILITY = 0.017
