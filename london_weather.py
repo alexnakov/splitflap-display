@@ -41,7 +41,6 @@ MOCK_WEATHER_BOARDS: Dict[str, List[str]] = {
         "TEMP       12°C",
         r"RAIN       15%",
         "BRISK SPRING BREEZE",
-        ""
     ],
     "NEWARK_ON_TRENT": [
         "NEWARK-ON-TRENT, UK",
@@ -50,7 +49,6 @@ MOCK_WEATHER_BOARDS: Dict[str, List[str]] = {
         "TEMP       12°C",
         r"RAIN       35%",
         "MIST LIFTING STEADY",
-        ""
     ],
     "PLOVDIV": [
         "PLOVDIV, BULGARIA",
@@ -59,7 +57,6 @@ MOCK_WEATHER_BOARDS: Dict[str, List[str]] = {
         "TEMP       12°C",
         r"RAIN       25%",
         "SUN WITH PASSING CLOUD",
-        "",
     ],
 }
 

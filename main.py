@@ -3,6 +3,7 @@ import pygame
 import sys
 import math
 import random
+import time
 import numpy as np
 import soundfile as sf
 from london_weather import fetch_weather_update, WEATHER_LOCATIONS
@@ -394,6 +395,7 @@ class App:
         self.current_location_key = self.locations[self.location_index]
         initial_rows = self._load_location_rows(self.current_location_key)
         self.refresh_timer = 0.0
+        self.refresh_delay = None
         self.ghost_timer = 0.0
 
         # Fonts
@@ -453,9 +455,17 @@ class App:
         self.current_location_key = next_key
         self.current_rows = list(next_rows)
         self.alt_rows = list(next_rows)
-        for flap_row, text in zip(self.rows, next_rows):
-            flap_row.flip_to(text)
+        for i, (flap_row, text) in enumerate(zip(self.rows, next_rows)):
+            if i == 5: # Last row get's set to ""
+                flap_row.flip_to("")
+            else:
+                flap_row.flip_to(text)
         self.refresh_timer = 0.0
+        self.refresh_delay = 0.0
+
+    def refresh_last_row(self):
+        self.rows[-1].flip_to(self.alt_rows[-1])
+        self.refresh_delay = None
 
     def run(self):
         running = True
@@ -481,24 +491,27 @@ class App:
                         self.refresh_board()
 
             # Ghost Timer
-            if self.ghost_timer >= GHOST_TIMER:  # every 10 seconds
+            if self.ghost_timer >= GHOST_TIMER: 
                 for flap_row in self.rows:
                     flap_row.ghost_flip(probability=GHOST_PROBABILITY)
                 self.ghost_timer = 0.0
 
             # Board refresh
-            if self.refresh_timer >= FULLBOARD_REFRESH_TIMER:  # every 60 seconds
-                self.refresh_timer()
+            if self.refresh_timer >= FULLBOARD_REFRESH_TIMER: 
+                self.refresh_board()
+
+            if self.refresh_delay is not None:
+                self.refresh_delay += dt
+                if self.refresh_delay >= REFRESH_DELAY:
+                    self.refresh_last_row()
 
             for flap_row in self.rows:
                 flap_row.update(dt)
 
             # Draw
             self.screen.fill(BG_COLOR)
-
             for flap_row in self.rows:
                 flap_row.draw(self.screen)
-
             pygame.display.flip()
         pygame.quit()
 
