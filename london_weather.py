@@ -143,7 +143,7 @@ def fetch_weather_update(location_key: str, use_mock: bool = False) -> List[str]
     tz = ZoneInfo(location["timezone"])
     now = datetime.datetime.now(tz)
 
-    date_line = now.strftime("%d %b %Y").upper()
+
     time_line = now.strftime("%I:%M %p")
     if time_line.startswith("0"):
         time_line = " " + time_line[1:]
