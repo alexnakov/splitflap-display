@@ -467,6 +467,9 @@ class App:
         self.rows[-1].flip_to(self.alt_rows[-1])
         self.refresh_delay = None
 
+    def flip_single_flap(self, char, row_idx, col_idx):
+        self.rows[row_idx].flaps[col_idx].queue_target(char)
+
     def run(self):
         running = True
         while running:
@@ -489,6 +492,8 @@ class App:
                         self.ghost_timer = 0.0            
                     elif event.key == pygame.K_c:
                         self.refresh_board()
+                    elif event.key == pygame.K_e:
+                        self.flip_single_flap("1", 2, 11)
 
             # Ghost Timer
             if self.ghost_timer >= GHOST_TIMER: 
