@@ -216,7 +216,7 @@ class SplitFlap:
 
     def _play_click(self):
         self.click_sounds[0].set_volume(0.05)
-        if random.random() < 0.2:
+        if random.random() < 0.5:
             self.click_sounds[0].play()
             self.font_color = (220,20,60)
         else:
