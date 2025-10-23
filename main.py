@@ -24,9 +24,8 @@ class SplitFlap:
         self.flip_close_time = FLIP_CLOSE_TIME 
         self.flip_open_time = FLIP_OPEN_TIME 
         self._bake_shadow()
-        self.click_sounds = [
-            pygame.mixer.Sound(f"./audio/sf-1.mp3")
-        ]
+        self.click_sounds = [pygame.mixer.Sound(f"./audio/sf-1.mp3")]
+        self.font_color = (230, 232, 235)
 
     def _bake_shadow(self):
         surf = self.shadow_surf
@@ -61,8 +60,8 @@ class SplitFlap:
         surface.blit(self.shadow_surf, r.topleft)
 
         # --- Glyphs ---
-        glyph_cur = self.font.render(self.current, True, TEXT_COLOR)
-        glyph_next = self.font.render(self.next_char if self.next_char else self.current, True, TEXT_COLOR)
+        glyph_cur = self.font.render(self.current, True, self.font_color)
+        glyph_next = self.font.render(self.next_char if self.next_char else self.current, True, self.font_color)
         gc_rect = glyph_cur.get_rect(center=r.center)
         gn_rect = glyph_next.get_rect(center=r.center)
 
@@ -92,8 +91,8 @@ class SplitFlap:
             surface.blit(self.shadow_surf, r.topleft)
 
             # Prepare glyph surfaces for current and next
-            glyph_cur = self.font.render(self.current, True, TEXT_COLOR)
-            glyph_next = self.font.render(self.next_char if self.next_char else self.current, True, TEXT_COLOR)
+            glyph_cur = self.font.render(self.current, True, self.font_color)
+            glyph_next = self.font.render(self.next_char if self.next_char else self.current, True, self.font_color)
 
             # Center glyphs
             gc_rect = glyph_cur.get_rect(center=r.center)
@@ -217,7 +216,11 @@ class SplitFlap:
 
     def _play_click(self):
         self.click_sounds[0].set_volume(0.05)
-        self.click_sounds[0].play()
+        if random.random() < 0.2:
+            self.click_sounds[0].play()
+            self.font_color = (230, 232, 235)
+        else:
+            self.font_color = (220,20,60)
     
     def _advance_char(self):
         """ It sets the next_char attr to the next char in CHARSET """
