@@ -7,6 +7,7 @@ import time
 import numpy as np
 from london_weather import fetch_weather_update, WEATHER_LOCATIONS
 from constants import *
+from datetime import datetime, timedelta
 
 class SplitFlap:
     """A single split-flap character with a two-phase flip animation."""
@@ -397,6 +398,7 @@ class App:
         self.refresh_timer = 0.0
         self.refresh_delay = None
         self.ghost_timer = 0.0
+        self.minute_update_timer = 0.0
 
         # Fonts
         font_path = "fonts/DINMittelschriftStd.otf"
@@ -462,13 +464,59 @@ class App:
                 flap_row.flip_to(text)
         self.refresh_timer = 0.0
         self.refresh_delay = 0.0
+        self.minute_update_timer = 0.0
 
     def refresh_last_row(self):
         self.rows[-1].flip_to(self.alt_rows[-1])
         self.refresh_delay = None
 
-    def flip_single_flap(self, char, row_idx, col_idx):
+    def flip_single_flap_to(self, char, row_idx, col_idx):
         self.rows[row_idx].flaps[col_idx].queue_target(char)
+
+    def print_flap_char(self, row_idx, col_idx, **kwargs):
+        print(self.rows[row_idx].flaps[col_idx].current, **kwargs)
+
+    def get_flap_char(self, row_idx, col_idx):
+        return self.rows[row_idx].flaps[col_idx].current
+
+    def increment_minute(self):
+        """
+        Reads the current time (HH:MM AM/PM) from the display,
+        adds one minute, and updates only the flaps that need to change.
+        """
+        row = 2
+
+        # --- 1. Read current characters from the display
+        h1 = self.get_flap_char(row, 11)
+        h2 = self.get_flap_char(row, 12)
+        m1 = self.get_flap_char(row, 14)
+        m2 = self.get_flap_char(row, 15)
+        p1 = self.get_flap_char(row, 17)
+        p2 = self.get_flap_char(row, 18)
+
+        hour_str = f"{h1}{h2}"
+        minute_str = f"{m1}{m2}"
+        period = f"{p1}{p2}"
+
+        time_str = f"{hour_str}:{minute_str} {period}"
+        time_obj = datetime.strptime(time_str, "%I:%M %p") + timedelta(minutes=1)
+
+        new_hour_str = time_obj.strftime("%I")
+        new_minute_str = time_obj.strftime("%M")
+        new_period = time_obj.strftime("%p")
+
+        updates = {
+            11: (h1, new_hour_str[0]),
+            12: (h2, new_hour_str[1]),
+            14: (m1, new_minute_str[0]),
+            15: (m2, new_minute_str[1]),
+            17: (p1, new_period[0]),
+            18: (p2, new_period[1]),
+        }
+
+        for col, (old_char, new_char) in updates.items():
+            if old_char != new_char:
+                self.flip_single_flap_to(new_char, row, col)
 
     def run(self):
         running = True
@@ -492,8 +540,6 @@ class App:
                         self.ghost_timer = 0.0            
                     elif event.key == pygame.K_c:
                         self.refresh_board()
-                    elif event.key == pygame.K_e:
-                        self.flip_single_flap("1", 2, 11)
 
             # Ghost Timer
             if self.ghost_timer >= GHOST_TIMER: 
@@ -510,8 +556,13 @@ class App:
                 if self.refresh_delay >= REFRESH_DELAY:
                     self.refresh_last_row()
 
+            if self.minute_update_timer >= 2:
+                self.increment_minute()
+                self.minute_update_timer = 0.0
+
             self.refresh_timer += dt
             self.ghost_timer += dt
+            self.minute_update_timer += dt
 
 
             for flap_row in self.rows:
