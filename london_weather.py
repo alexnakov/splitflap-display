@@ -37,7 +37,7 @@ MOCK_WEATHER_BOARDS: Dict[str, List[str]] = {
     "LONDON": [
         "LONDON, UK",
         "",
-        "LOCAL TIME 09:45",
+        "LOCAL TIME 09:45 AM",
         "TEMP       12°C",
         r"RAIN       15%",
         "BRISK SPRING BREEZE",
@@ -45,7 +45,7 @@ MOCK_WEATHER_BOARDS: Dict[str, List[str]] = {
     "NEWARK_ON_TRENT": [
         "NEWARK-ON-TRENT, UK",
         "",
-        "LOCAL TIME 09:45",
+        "LOCAL TIME 09:45 AM",
         "TEMP       12°C",
         r"RAIN       35%",
         "MIST LIFTING STEADY",
@@ -53,7 +53,7 @@ MOCK_WEATHER_BOARDS: Dict[str, List[str]] = {
     "PLOVDIV": [
         "PLOVDIV, BULGARIA",
         "",
-        "LOCAL TIME 11:45",
+        "LOCAL TIME 11:45 AM",
         "TEMP       12°C",
         r"RAIN       25%",
         "SUN WITH PASSING CLOUD",
