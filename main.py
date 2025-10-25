@@ -219,9 +219,6 @@ class SplitFlap:
         self.click_sounds[0].set_volume(0.05)
         if random.random() < 0.5:
             self.click_sounds[0].play()
-            self.font_color = (220,20,60)
-        else:
-            self.font_color = (230, 232, 235)
     
     def _advance_char(self):
         """ It sets the next_char attr to the next char in CHARSET """
