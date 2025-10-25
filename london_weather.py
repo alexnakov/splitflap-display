@@ -37,8 +37,8 @@ MOCK_WEATHER_BOARDS: Dict[str, List[str]] = {
     "LONDON": [
         "LONDON, UK",
         "",
-        "LOCAL TIME 09:45",
-        "TEMP       12°C AM",
+        "LOCAL TIME 09:45 AM",
+        "TEMP       12°C",
         r"RAIN       15%",
         "BRISK SPRING BREEZE",
     ],

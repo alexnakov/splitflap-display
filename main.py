@@ -518,6 +518,13 @@ class App:
             if old_char != new_char:
                 self.flip_single_flap_to(new_char, row, col)
 
+    def any_flaps_are_moving(self):
+        for row in self.rows:
+            for flap in row.flaps:
+                if flap.current != flap.target:
+                    return True
+        return False
+
     def run(self):
         running = True
         while running:
@@ -556,8 +563,11 @@ class App:
                 if self.refresh_delay >= REFRESH_DELAY:
                     self.refresh_last_row()
 
-            if self.minute_update_timer >= 2:
-                self.increment_minute()
+            if self.minute_update_timer >= MINUTE_UPDATE_TIMER:
+                if self.any_flaps_are_moving():
+                    pass
+                else:
+                    self.increment_minute()
                 self.minute_update_timer = 0.0
 
             self.refresh_timer += dt
