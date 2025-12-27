@@ -14,18 +14,18 @@ WEATHER_LOCATIONS: List[Dict[str, str]] = [
         "timezone": "Europe/London",
     },
     {
-        "key": "NEWARK_ON_TRENT",
-        "display": "NEWARK-ON-TRENT, UK",
-        "latitude": 53.0768,
-        "longitude": -0.8081,
-        "timezone": "Europe/London",
+        "key": "PARIS",
+        "display": "PARIS, FRANCE",
+        "latitude": 48.8534,
+        "longitude": -2.3488,
+        "timezone": "Europe/Paris",
     },
     {
-        "key": "PLOVDIV",
-        "display": "PLOVDIV, BULGARIA",
-        "latitude": 42.1354,
-        "longitude": 24.7453,
-        "timezone": "Europe/Sofia",
+        "key": "CHICAGO",
+        "display": "CHICAGO, USA",
+        "latitude": 41.85,
+        "longitude": -87.65,
+        "timezone": "America/Chicago",
     },
 ]
 
@@ -98,7 +98,7 @@ def _fetch_location_weather(location_key: str) -> Dict[str, Optional[float]]:
                 pass
 
         if rain_prob is None:
-            desc = "WEATHER DATA UNAVAILABLE"
+            desc = "HAVE A GREAT DAY!"
         elif rain_prob < 20:
             desc = "CLEAR SKIES EXPECTED"
         elif rain_prob < 50:
