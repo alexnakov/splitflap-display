@@ -59,8 +59,8 @@ INTER_FLAP_DELAY = 0.039  # cascade delay between neighboring cells
 TOGGLE_PERIOD = 100.0 # Keeping super high for testing
 
 GHOST_TIMER = 60 * 1 # 1 min
-FULLBOARD_REFRESH_TIMER = 60 * 12 # 8 mins
-REFRESH_DELAY = 9
+FULLBOARD_REFRESH_TIMER = 60 * 5
+REFRESH_DELAY = 9 # For the bottom row refreshing
 MINUTE_UPDATE_TIMER = 60
 
 GHOST_PROBABILITY = 0.017
