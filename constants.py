@@ -38,14 +38,11 @@ MONITOR_HEIGHT_MM = 366.5
 SCREEN_W = 1920
 SCREEN_H = 1080
 
-# --- Derived pixel density ---
-PX_PER_MM = SCREEN_W / MONITOR_WIDTH_MM
-
 # --- Base layout design ---
-CELL_W = 20
+CELL_W = 55
 CELL_H = int(CELL_W * (64 / 36))
-CELL_GAP = 3
-TOP_MARGIN = 40
+CELL_GAP = 6
+TOP_MARGIN = 20
 LEFT_MARGIN = 20
 ROWS = 6
 COLS = 22
@@ -53,18 +50,6 @@ COLS = 22
 # --- Compute scaling to fit display ---
 BOARD_W = COLS * CELL_W + (COLS - 1) * CELL_GAP + LEFT_MARGIN * 2
 BOARD_H = ROWS * CELL_H + (ROWS - 1) * CELL_GAP + TOP_MARGIN
-
-SCALE_W = SCREEN_W / BOARD_W
-SCALE_H = SCREEN_H / BOARD_H
-SCALE = min(SCALE_W, SCALE_H)
-
-# --- Apply scaling ---
-CELL_W = int(CELL_W * SCALE)
-CELL_H = int(CELL_H * SCALE)
-CELL_GAP = int(CELL_GAP * SCALE)
-TOP_MARGIN = int(TOP_MARGIN * SCALE)
-LEFT_MARGIN = int(LEFT_MARGIN * SCALE)
-
 
 # Animation timings (seconds)
 FLIP_CLOSE_TIME = 0.062   # top half folding down
@@ -74,8 +59,8 @@ INTER_FLAP_DELAY = 0.039  # cascade delay between neighboring cells
 TOGGLE_PERIOD = 100.0 # Keeping super high for testing
 
 GHOST_TIMER = 60 * 1 # 1 min
-FULLBOARD_REFRESH_TIMER = 60 * 12 # 8 mins
-REFRESH_DELAY = 9
+FULLBOARD_REFRESH_TIMER = 60 * 5
+REFRESH_DELAY = 9 # For the bottom row refreshing
 MINUTE_UPDATE_TIMER = 60
 
 GHOST_PROBABILITY = 0.017
