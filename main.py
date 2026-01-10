@@ -383,6 +383,7 @@ class App:
         pygame.display.set_caption("Split-Flap Display – Demo")
         pygame.mixer.pre_init(44100, -16, 2, 256)
         pygame.mixer.init()
+        pygame.mixer.set_num_channels(16)
         self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN, display=0)
         SCREEN_W, SCREEN_H = self.screen.get_size()
         self.clock = pygame.time.Clock()
@@ -574,12 +575,12 @@ class App:
 
             for flap_row in self.rows:
                 flap_row.update(dt)
-
             # Draw
             self.screen.fill(BG_COLOR)
             for flap_row in self.rows:
                 flap_row.draw(self.screen)
             pygame.display.flip()
+
         pygame.quit()
 
 if __name__ == '__main__':
