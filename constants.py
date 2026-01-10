@@ -5,34 +5,8 @@ SLOT_COLOR = (8, 9, 10)
 TEXT_COLOR = (230, 232, 235)
 ACCENT = (40, 48, 56)
 
-# Character set typical of split-flap boards
 CHARSET = r" ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,-/'#:%°"
 CHAR_INDEX = {c: i for i, c in enumerate(CHARSET)}
-
-SOUND_PATH = "./audio/single-flap.mp3"
-
-# Demo texts (must be same length for best effect; will be padded)
-TEXT_A = [
-    "NEW YORK  JFK  AA123 ",
-    "BOSTON     BOS  DL987",
-    "CHICAGO    ORD  UA452",
-    "LOS ANGELES LAX SW330",
-    "SEATTLE    SEA  AS808",
-    "MIAMI      MIA  AA455",
-]
-TEXT_B = [
-    "SAN DIEGO  SAN UA987 ",
-    "ATLANTA    ATL DL204",
-    "DALLAS     DFW AA540",
-    "DENVER     DEN UA311",
-    "PHOENIX    PHX SW209",
-    "LAS VEGAS  LAS NK701",
-]
-
-# Board / cell sizing
-# --- Physical monitor dimensions (mm) ---
-MONITOR_WIDTH_MM  = 612.3
-MONITOR_HEIGHT_MM = 366.5
 
 # --- Actual screen resolution (adjust to your monitor) ---
 SCREEN_W = 1920
