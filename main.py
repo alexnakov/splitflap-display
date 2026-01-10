@@ -5,7 +5,7 @@ import math
 import random
 import time
 import numpy as np
-from london_weather import fetch_weather_update, WEATHER_LOCATIONS
+from weather import fetch_weather_update, WEATHER_LOCATIONS
 from constants import *
 from datetime import datetime, timedelta
 
