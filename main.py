@@ -27,7 +27,7 @@ class SplitFlap:
         self._bake_shadow()
         self.click_sounds = [pygame.mixer.Sound(f"./audio/sf-1.mp3")]
         self.font_color = (230, 232, 235)
-        self.v_offset = 15 # To avoid having letters mostly in the top half
+        self.v_offset = 12 # To avoid having letters mostly in the top half
 
     def _bake_shadow(self):
         surf = self.shadow_surf
