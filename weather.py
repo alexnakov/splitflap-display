@@ -14,11 +14,11 @@ WEATHER_LOCATIONS: List[Dict[str, str]] = [
         "timezone": "Europe/London",
     },
     {
-        "key": "NEW YORK",
-        "display": "NEW YORK, USA",
-        "latitude": 40.7128,
-        "longitude": -74.0060,
-        "timezone": "America/New York",
+        "key": "CHICAGO",
+        "display": "CHICAGO, USA",
+        "latitude": 41.8832,
+        "longitude": -87.6324,
+        "timezone": "America/chicago",
     },
     {
         "key": "TOKYO",
