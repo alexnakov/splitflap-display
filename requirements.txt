@@ -5,9 +5,7 @@ cffi==2.0.0
 charset-normalizer==3.4.4
 decorator==5.2.1
 idna==3.11
-joblib==1.5.2
 lazy_loader==0.4
-librosa==0.11.0
 llvmlite==0.45.1
 msgpack==1.1.2
 numba==0.62.1
@@ -16,13 +14,8 @@ packaging==25.0
 platformdirs==4.5.0
 pooch==1.8.2
 pycparser==2.23
-pydub==0.25.1
 pygame==2.6.1
 requests==2.32.5
-scikit-learn==1.7.2
-scipy==1.16.2
-soundfile==0.13.1
-soxr==1.0.0
 standard-aifc==3.13.0
 standard-chunk==3.13.0
 standard-sunau==3.13.0
