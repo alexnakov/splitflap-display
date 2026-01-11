@@ -14,19 +14,32 @@ WEATHER_LOCATIONS: List[Dict[str, str]] = [
         "timezone": "Europe/London",
     },
     {
-        "key": "PARIS",
-        "display": "PARIS, FRANCE",
-        "latitude": 48.8534,
-        "longitude": -2.3488,
-        "timezone": "Europe/Paris",
-    },
-    {
         "key": "CHICAGO",
         "display": "CHICAGO, USA",
-        "latitude": 41.85,
-        "longitude": -87.65,
-        "timezone": "America/Chicago",
+        "latitude": 41.8832,
+        "longitude": -87.6324,
+        "timezone": "America/chicago",
     },
+    {
+        "key": "TOKYO",
+        "display": "TOKYO, JAPAN",
+        "latitude": 35.6764,
+        "longitude": 139.6500,
+        "timezone": "Asia/Tokyo",
+    },
+    {
+        "key": "BERLIN",
+        "display": "BERLIN, GERMANY",
+        "latitude": 52.5200,
+        "longitude": 13.4050,
+        "timezone": "Europe/Berlin",
+    },{
+        "key": "SYDNEY",
+        "display": "SYDNEY, AUSTRALIA",
+        "latitude": -33.8727,
+        "longitude": 151.2057,
+        "timezone": "Australia/Sydney",
+    }
 ]
 
 _LOCATION_MAP: Dict[str, Dict[str, str]] = {

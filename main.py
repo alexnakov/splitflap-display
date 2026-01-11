@@ -27,6 +27,7 @@ class SplitFlap:
         self._bake_shadow()
         self.click_sounds = [pygame.mixer.Sound(f"./audio/sf-1.mp3")]
         self.font_color = (230, 232, 235)
+        self.v_offset = 12 # To avoid having letters mostly in the top half
 
     def _bake_shadow(self):
         surf = self.shadow_surf
@@ -63,8 +64,8 @@ class SplitFlap:
         # --- Glyphs ---
         glyph_cur = self.font.render(self.current, True, self.font_color)
         glyph_next = self.font.render(self.next_char if self.next_char else self.current, True, self.font_color)
-        gc_rect = glyph_cur.get_rect(center=r.center)
-        gn_rect = glyph_next.get_rect(center=r.center)
+        gc_rect = glyph_cur.get_rect(center=(r.centerx, r.centery + self.v_offset))
+        gn_rect = glyph_next.get_rect(center=(r.centerx, r.centery + self.v_offset))
 
         # --- Idle state ---
         if self.state == 'idle':
@@ -96,8 +97,8 @@ class SplitFlap:
             glyph_next = self.font.render(self.next_char if self.next_char else self.current, True, self.font_color)
 
             # Center glyphs
-            gc_rect = glyph_cur.get_rect(center=r.center)
-            gn_rect = glyph_next.get_rect(center=r.center)
+            gc_rect = glyph_cur.get_rect(center=(r.centerx, r.centery + self.v_offset))
+            gn_rect = glyph_next.get_rect(center=(r.centerx, r.centery + self.v_offset))
 
             # Draw depending on state
             if self.state == 'idle':
@@ -120,6 +121,8 @@ class SplitFlap:
         # Pre-render halves
         cell = pygame.Surface((r.w, r.h), pygame.SRCALPHA)
         cell_cur = cell.copy(); cell_next = cell.copy()
+
+        Y_OFFSET = 5 
         cell_cur.blit(glyph_cur, gc_rect.move(-r.x, -r.y))
         cell_next.blit(glyph_next, gn_rect.move(-r.x, -r.y))
 
