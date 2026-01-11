@@ -1,6 +1,15 @@
-# 🎮 Pygame Application
+# 🎮 Digital Solari Board (Pygame)
 
-A Python game built using **pygame**. This project demonstrates game logic, rendering, and event handling using Python.
+A **digital Solari board–inspired display** built with **Python and Pygame**.
+The application features a **beautiful flipping animation with sound**, cycling through the cities:
+
+- 🌍 London
+- 🌆 Chicago
+- 🗼 Tokyo
+- 🏙️ Berlin
+- 🌉 Sydney
+
+For each city, the board displays **local time and live weather data**, recreating the iconic mechanical split-flap aesthetic in a modern digital form.
 
 ---
 
@@ -37,7 +46,9 @@ Using a virtual environment keeps project dependencies isolated and avoids confl
 
 ---
 
-## 🍎 macOS Setup
+## 💻 Installation (macOS & Linux)
+
+> It is recommended to use a virtual environment to isolate dependencies.
 
 ### 1. Create Virtual Environment
 
@@ -48,42 +59,13 @@ python3 -m venv venv
 ### 2. Activate Virtual Environment
 
 ```bash
-source venv/bin/activate
+source venv/bin/activate   # macOS & Linux
 ```
 
 ### 3. Upgrade pip
 
 ```bash
 pip install --upgrade pip
-```
-
-### 4. Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
----
-
-## 🐧 Linux Setup
-
-### 1. Install System Dependencies
-
-```bash
-sudo apt update
-sudo apt install python3 python3-venv python3-pip -y
-```
-
-### 2. Create Virtual Environment
-
-```bash
-python3 -m venv venv
-```
-
-### 3. Activate Virtual Environment
-
-```bash
-source venv/bin/activate
 ```
 
 ### 4. Install Dependencies
